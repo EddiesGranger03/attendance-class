@@ -38,8 +38,12 @@ def auto_migrate():
         try:
             if engine.dialect.name == "postgresql":
                 conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN IF NOT EXISTS absence_reason VARCHAR(500);"))
+                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN IF NOT EXISTS period_id VARCHAR(36);"))
+                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN IF NOT EXISTS is_settled BOOLEAN DEFAULT FALSE;"))
             elif engine.dialect.name == "sqlite":
                 conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN absence_reason VARCHAR(500);"))
+                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN period_id VARCHAR(36);"))
+                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN is_settled BOOLEAN DEFAULT 0;"))
             conn.commit()
         except Exception:
             pass

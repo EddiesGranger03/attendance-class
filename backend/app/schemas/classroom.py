@@ -17,7 +17,9 @@ class ClassroomResponse(BaseModel):
     name: str
     student_count: int = 0
     session_count: int = 0
+    active_revenue: float = 0.0
     total_revenue: float = 0.0
+    needs_settlement: bool = False
     created_at: datetime
 
     class Config:
@@ -25,5 +27,7 @@ class ClassroomResponse(BaseModel):
 
 
 class ClassroomDetailResponse(ClassroomResponse):
-    total_revenue: float = 0.0
     average_attendance: float = 0.0
+    active_session_count: int = 0
+    settled_period_count: int = 0
+    settlement_reminder: Optional[str] = None

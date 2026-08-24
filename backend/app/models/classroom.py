@@ -17,3 +17,4 @@ class Classroom(Base):
     teacher = relationship("User", back_populates="classrooms")
     students = relationship("Student", back_populates="classroom", cascade="all, delete-orphan")
     sessions = relationship("AttendanceSession", back_populates="classroom", cascade="all, delete-orphan")
+    revenue_periods = relationship("RevenuePeriod", back_populates="classroom", cascade="all, delete-orphan")

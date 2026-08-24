@@ -325,7 +325,7 @@
     background: var(--topbar-bg);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    padding: 10px 24px;
+    padding: 12px 32px;
     display: flex; align-items: center; justify-content: space-between;
     transition: background-color var(--transition), border-color var(--transition);
   }
@@ -521,21 +521,199 @@
     transform: translateY(-1px);
   }
 
+  /* Settlement Alert Banner (Day 2 reminder) */
+  .settlement-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(135deg, rgba(230, 126, 34, 0.12), rgba(243, 156, 18, 0.06));
+    border: 1px solid rgba(230, 126, 34, 0.4);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    animation: slideUp 0.3s ease;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 18px rgba(230, 126, 34, 0.15);
+  }
+  .settlement-banner-icon {
+    font-size: 26px;
+    flex-shrink: 0;
+    animation: bellShake 2s infinite ease-in-out;
+  }
+  @keyframes bellShake {
+    0%, 100% { transform: rotate(0); }
+    10%, 30% { transform: rotate(-10deg); }
+    20%, 40% { transform: rotate(10deg); }
+    50% { transform: rotate(0); }
+  }
+  .settlement-banner-content { flex: 1; min-width: 200px; }
+  .settlement-banner-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #e67e22;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .settlement-banner-desc {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .settlement-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-settle-action {
+    padding: 8px 14px;
+    border-radius: var(--radius-xs);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-settle-action.confirm {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: #fff;
+    box-shadow: 0 3px 12px rgba(230, 126, 34, 0.35);
+  }
+  .btn-settle-action.confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(230, 126, 34, 0.5);
+  }
+  .btn-settle-action.secondary {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+  .btn-settle-action.secondary:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--text-muted);
+  }
+
+  /* Revenue Card Actions */
+  .active-badge {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+  .revenue-card-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .btn-mini-settle, .btn-mini-history {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .btn-mini-settle {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: #fff;
+    border: none;
+  }
+  .btn-mini-settle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(230, 126, 34, 0.4);
+  }
+  .btn-mini-history {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .btn-mini-history:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-card-hover);
+  }
+
+  /* Period History Table */
+  .period-hist-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+    font-size: 12.5px;
+  }
+  .period-hist-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--bg-input);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .period-hist-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .period-hist-table tr:hover td {
+    background: var(--bg-card-hover);
+  }
+  .btn-table-action {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+  }
+  .btn-table-action:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .btn-table-action.undo:hover {
+    border-color: #e67e22;
+    color: #e67e22;
+  }
+
   .shell {
     display: flex;
-    max-width: 1200px;
+    width: 100%;
+    max-width: 1720px;
     margin: 0 auto;
-    min-height: calc(100vh - 60px);
+    min-height: calc(100vh - 65px);
+    padding: 0 20px;
   }
 
   /* ========== SIDEBAR ========== */
   aside.sidebar {
-    width: 270px; flex-shrink: 0;
-    padding: 24px 16px 40px;
+    width: 290px; flex-shrink: 0;
+    padding: 24px 18px 40px;
     border-right: 1px solid var(--border);
     overflow-y: auto;
-    max-height: calc(100vh - 60px);
-    position: sticky; top: 60px;
+    max-height: calc(100vh - 65px);
+    position: sticky; top: 65px;
   }
 
   .sidebar-section-title {
@@ -622,7 +800,7 @@
   /* ========== MAIN ========== */
   main {
     flex: 1;
-    padding: 28px 32px 60px;
+    padding: 28px 40px 60px;
     min-width: 0;
     overflow-y: auto;
   }
@@ -646,8 +824,8 @@
   .live-clock-strip {
     display: flex; align-items: center; justify-content: space-between;
     gap: 14px; flex-wrap: wrap;
-    margin-bottom: 18px;
-    padding: 16px 20px;
+    margin-bottom: 22px;
+    padding: 18px 24px;
     background: linear-gradient(135deg, rgba(255,110,108,0.06), rgba(103,212,160,0.04));
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -674,9 +852,9 @@
   /* Summary strip */
   .summary-strip {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 14px;
-    margin-bottom: 22px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
     animation: slideInRight 0.4s ease;
   }
   .summary-card {
@@ -846,9 +1024,9 @@
   }
   .att-table thead th {
     background: rgba(255,255,255,0.03);
-    padding: 12px 14px;
+    padding: 13px 18px;
     text-align: left;
-    font-size: 11px;
+    font-size: 11.5px;
     text-transform: uppercase;
     letter-spacing: 1.2px;
     color: var(--text-muted);
@@ -867,23 +1045,23 @@
   .att-table tbody tr.is-present { background: rgba(103, 212, 160, 0.04); }
   .att-table tbody tr.is-present:hover { background: rgba(103, 212, 160, 0.07); }
   .att-table td {
-    padding: 11px 14px;
+    padding: 13px 18px;
     vertical-align: middle;
   }
   .att-table td.center { text-align: center; }
   .att-table .stt {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--text-muted);
-    width: 40px;
+    width: 44px;
   }
   .att-table .student-name {
     font-weight: 500;
-    font-size: 14px;
+    font-size: 14.5px;
   }
   .att-table .student-price {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
+    font-size: 13.5px;
     color: var(--text-muted);
     white-space: nowrap;
   }
@@ -1112,30 +1290,384 @@
   .toast.error { border-color: var(--border-accent); }
   .toast.error::before { content: '✕'; color: var(--accent); font-weight: 700; }
 
-  /* ========== RESPONSIVE ========== */
-  @media (max-width: 768px) {
-    .shell { flex-direction: column; }
-    aside.sidebar {
-      width: 100%;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 16px;
-      max-height: none;
-      position: static;
-    }
-    main { padding: 20px 16px 50px; }
-    .summary-strip { grid-template-columns: repeat(2, 1fr); }
-    .student-add-row { flex-direction: column; }
-    .student-add-row input[name="sprice"] { width: 100%; }
-    .class-header h2 { font-size: 22px; }
-    .total-strip .amount { font-size: 20px; }
-    header.topbar { flex-direction: column; gap: 10px; align-items: flex-start; }
-    .topbar-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; }
+  /* Mobile Menu Toggle Button in Topbar */
+  .mobile-menu-btn {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 6px 11px;
+    border-radius: var(--radius-xs);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    user-select: none;
+  }
+  .mobile-menu-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-card-hover);
   }
 
-  @media (max-width: 480px) {
-    .summary-strip { grid-template-columns: 1fr; }
-    .auth-card { width: 92vw; padding: 28px 20px; }
+  /* Mobile Sidebar Drawer Header */
+  .sidebar-mobile-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-close-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .sidebar-close-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 140;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  .sidebar-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* ========== COMPREHENSIVE RESPONSIVE DESIGN (Smartphone, Tablet, iPad, Laptop, PC) ========== */
+
+  /* Tablet & Small Laptop (<= 1024px) */
+  @media (max-width: 1024px) {
+    aside.sidebar {
+      width: 240px;
+      padding: 20px 12px 30px;
+    }
+    main {
+      padding: 22px 20px 50px;
+    }
+    .summary-strip {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+  }
+
+  /* Smartphone & iPad / Tablet (<= 868px) */
+  @media (max-width: 868px) {
+    .mobile-menu-btn {
+      display: inline-flex;
+    }
+    .sidebar-mobile-header {
+      display: flex;
+    }
+    .desktop-only-title {
+      display: none;
+    }
+
+    /* Transform Sidebar into an Off-canvas Drawer */
+    aside.sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 290px;
+      max-width: 85vw;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      z-index: 150;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 10px 0 35px rgba(0, 0, 0, 0.4);
+      padding: 16px 14px 40px;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+    aside.sidebar.open {
+      transform: translateX(0);
+    }
+
+    .shell {
+      display: block;
+      width: 100%;
+      min-height: auto;
+    }
+    main {
+      width: 100%;
+      padding: 18px 14px 60px;
+    }
+
+    /* Settlement Reminder Banner */
+    .settlement-banner {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      padding: 14px 14px;
+      margin-bottom: 16px;
+    }
+    .settlement-banner-content {
+      min-width: 0;
+      width: 100%;
+    }
+    .settlement-banner-desc {
+      font-size: 12px;
+    }
+    .settlement-banner-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+    .btn-settle-action {
+      width: 100%;
+      justify-content: center;
+      padding: 9px 10px;
+      font-size: 12px;
+      text-align: center;
+      white-space: normal;
+    }
+
+    /* Class Header */
+    .class-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .class-header h2 {
+      font-size: 22px;
+    }
+    .class-header-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+    .btn-export-class {
+      width: 100%;
+      justify-content: center;
+      padding: 8px 10px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* Summary Cards */
+    .summary-strip {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .summary-card {
+      padding: 14px 14px;
+    }
+    .summary-card .value {
+      font-size: 18px;
+    }
+    .summary-card:nth-child(4) {
+      grid-column: span 2;
+    }
+    .revenue-card-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .btn-mini-settle, .btn-mini-history {
+      flex: 1;
+      padding: 7px 10px;
+      font-size: 11.5px;
+      text-align: center;
+    }
+  }
+
+  /* Smartphone (< 640px) */
+  @media (max-width: 640px) {
+    header.topbar {
+      padding: 8px 12px;
+    }
+    main {
+      padding: 14px 10px 60px;
+    }
+
+    /* Live Clock Strip */
+    .live-clock-strip {
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      gap: 8px;
+    }
+    .live-clock-strip .clock-date {
+      font-size: 13.5px;
+    }
+    .live-clock-strip .clock-time {
+      font-size: 22px;
+    }
+
+    /* Card & Action bar */
+    .card {
+      padding: 16px 12px;
+      margin-bottom: 16px;
+      border-radius: var(--radius-sm);
+    }
+    .card-action-bar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .session-toolbar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .session-toolbar input[type="date"] {
+      flex: 1;
+      max-width: 175px;
+    }
+    .btn-add-student-popup {
+      width: 100%;
+      justify-content: center;
+      padding: 9px 14px;
+    }
+
+    /* Attendance Table & Radios */
+    .att-table-wrap {
+      border-radius: var(--radius-xs);
+    }
+    .att-table th, .att-table td {
+      padding: 9px 6px;
+      font-size: 12.5px;
+    }
+    .att-table .stt {
+      width: 26px;
+      font-size: 11px;
+      padding-left: 6px;
+    }
+    .att-table .student-name {
+      font-size: 13px;
+    }
+    .att-table .student-price {
+      font-size: 11.5px;
+    }
+    .att-radio .radio-mark {
+      width: 32px;
+      height: 32px;
+    }
+    .att-radio .radio-mark .dot {
+      width: 15px;
+      height: 15px;
+    }
+    .att-table .action-cell .redit {
+      padding: 4px 8px;
+      font-size: 16px;
+    }
+
+    /* Total Strip */
+    .total-strip {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 12px 14px;
+    }
+    .total-strip .amount {
+      font-size: 20px;
+    }
+
+    /* Modals */
+    .modal-box, .modal-box-large {
+      width: 94vw;
+      max-width: 94vw;
+      padding: 20px 14px 18px;
+      border-radius: var(--radius-sm);
+    }
+    .modal-box h3 {
+      font-size: 17px;
+    }
+    .form-row-2col {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .modal-actions {
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+    .modal-actions button {
+      width: 100%;
+      padding: 11px;
+    }
+    .profile-stats-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+
+  /* Extra Small Devices (<= 460px) */
+  @media (max-width: 460px) {
+    .brand h1 {
+      font-size: 14.5px;
+    }
+    .brand .sub {
+      display: none;
+    }
+    .brand-logo-img {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+    .mobile-menu-txt {
+      display: none;
+    }
+    .mobile-menu-btn {
+      padding: 5px 8px;
+      font-size: 14px;
+    }
+    .topbar-actions {
+      gap: 5px;
+    }
+    .theme-toggle-btn {
+      padding: 5px 7px;
+      font-size: 11px;
+    }
+    .theme-label {
+      display: none;
+    }
+    .teacher-profile-btn {
+      padding: 3px 6px 3px 3px;
+    }
+    .teacher-name-txt {
+      max-width: 70px;
+      font-size: 11.5px;
+    }
+    .settlement-banner-actions {
+      grid-template-columns: 1fr;
+    }
+    .class-header-actions {
+      grid-template-columns: 1fr;
+    }
+    .auth-card {
+      width: 94vw;
+      padding: 24px 16px;
+    }
   }
 
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -1197,11 +1729,16 @@
 <!-- ========== MAIN APP INTERFACE ========== -->
 <div id="app">
   <header class="topbar">
-    <div class="brand" onclick="openTeacherProfileModal()" title="Rocket Learners — Bấm xem hồ sơ giáo viên">
-      <img src="../image/logo.png" class="brand-logo-img" alt="Rocket Learners Logo" onerror="this.onerror=null; this.src='/image/logo.png';">
-      <div>
-        <h1 class="display">Rocket Learners</h1>
-        <span class="sub">English for a Brighter Future</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()" title="Mở danh sách lớp học">
+        <span>☰</span> <span class="mobile-menu-txt">Lớp</span>
+      </button>
+      <div class="brand" onclick="openTeacherProfileModal()" title="Rocket Learners — Bấm xem hồ sơ giáo viên">
+        <img src="../image/logo.png" class="brand-logo-img" alt="Rocket Learners Logo" onerror="this.onerror=null; this.src='/image/logo.png';">
+        <div>
+          <h1 class="display">Rocket Learners</h1>
+          <span class="sub">English for a Brighter Future</span>
+        </div>
       </div>
     </div>
     <div class="topbar-actions">
@@ -1217,9 +1754,15 @@
     </div>
   </header>
 
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
   <div class="shell">
-    <aside class="sidebar">
-      <div class="sidebar-section-title">Lớp học</div>
+    <aside class="sidebar" id="appSidebar">
+      <div class="sidebar-mobile-header">
+        <div class="sidebar-section-title" style="margin:0;font-size:12px;">📚 Danh sách lớp học</div>
+        <button type="button" class="sidebar-close-btn" onclick="closeMobileSidebar()" title="Đóng">&times;</button>
+      </div>
+      <div class="sidebar-section-title desktop-only-title">Lớp học</div>
       <div id="classList"></div>
       <form class="add-class-form" id="addClassForm">
         <input type="text" name="cname" placeholder="Tên lớp học mới…" autocomplete="off" required>
@@ -1660,6 +2203,23 @@ function promptUpdateTeacherName() {
   });
 }
 
+/* ---------------- Mobile Sidebar Controls ---------------- */
+function toggleMobileSidebar() {
+  const sidebar = document.getElementById('appSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (sidebar && overlay) {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  }
+}
+
+function closeMobileSidebar() {
+  const sidebar = document.getElementById('appSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+}
+
 /* ---------------- Data Loading & Rendering ---------------- */
 const SELECTED_CLASS_KEY = 'attendance_selected_class_id';
 
@@ -1721,6 +2281,7 @@ function renderClassList() {
       localStorage.setItem(SELECTED_CLASS_KEY, selectedClassId);
       renderClassList();
       loadClassData(c.id);
+      closeMobileSidebar();
     });
 
     div.querySelector('.del').addEventListener('click', (e) => {
@@ -1773,6 +2334,7 @@ document.getElementById('addClassForm').addEventListener('submit', async (e) => 
     selectedClassId = newClass.id;
     localStorage.setItem(SELECTED_CLASS_KEY, selectedClassId);
     showToast(`Đã tạo lớp "${newClass.name}"`);
+    closeMobileSidebar();
     await loadClasses(newClass.id);
   } catch (err) {
     showToast(err.message || 'Lỗi khi tạo lớp học.', 'error');
@@ -1821,15 +2383,49 @@ function renderMain() {
   const cls = state.currentClass;
   const students = state.students;
   const sessions = state.sessions;
+  const activeSessions = sessions.filter(s => !s.is_settled);
+  const activeRevenue = cls.active_revenue !== undefined ? cls.active_revenue : activeSessions.reduce((sum, s) => sum + (s.total_amount || 0), 0);
+  const activeSessionCount = cls.active_session_count !== undefined ? cls.active_session_count : activeSessions.length;
+
+  // Monthly settlement banner (shown on/after 2nd of month if there are active sessions)
+  let settlementBannerHTML = '';
+  if (cls.needs_settlement) {
+    settlementBannerHTML = `
+      <div class="settlement-banner">
+        <div class="settlement-banner-icon">🔔</div>
+        <div class="settlement-banner-content">
+          <div class="settlement-banner-title">Đã đến kỳ chốt doanh thu tháng (Mùng 2)!</div>
+          <div class="settlement-banner-desc">
+            Lớp <strong>${escapeHtml(cls.name)}</strong> đang có <strong>${activeSessionCount} buổi học</strong> trong kỳ này (Doanh thu: <strong style="color:var(--success);">${fmtVND(activeRevenue)}</strong>).<br>
+            Vui lòng <strong>Xuất PDF báo cáo & Chốt kỳ</strong> để gửi báo cáo và chuyển sang kỳ doanh thu mới.
+          </div>
+        </div>
+        <div class="settlement-banner-actions">
+          <button type="button" class="btn-settle-action confirm" id="bannerSettleBtn">
+            📄 Xuất PDF & Chốt kỳ
+          </button>
+          <button type="button" class="btn-settle-action secondary" id="bannerHistoryBtn">
+            📊 Lịch sử kỳ (${cls.settled_period_count || 0})
+          </button>
+        </div>
+      </div>
+    `;
+  }
 
   main.innerHTML = `
-    <!-- Class Header with PDF Export Button -->
+    <!-- Monthly Settlement Reminder Banner -->
+    ${settlementBannerHTML}
+
+    <!-- Class Header with Actions -->
     <div class="class-header">
       <div>
         <h2 class="display">📚 ${escapeHtml(cls.name)}</h2>
-        <div class="meta">${cls.student_count} học sinh · ${cls.session_count} buổi đã điểm danh</div>
+        <div class="meta">${cls.student_count} học sinh · ${cls.session_count} buổi tổng cộng · ${cls.settled_period_count || 0} kỳ đã chốt</div>
       </div>
-      <div class="class-header-actions">
+      <div class="class-header-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn-export-class" id="openPeriodHistBtn" title="Xem lịch sử các kỳ doanh thu đã chốt">
+          📊 Lịch sử các kỳ (${cls.settled_period_count || 0})
+        </button>
         <button type="button" class="btn-export-class" id="exportClassBtn" title="In & Xuất báo cáo PDF cho lớp ${escapeHtml(cls.name)}">
           📄 Xuất PDF lớp này
         </button>
@@ -1849,16 +2445,23 @@ function renderMain() {
         <div class="value accent">${cls.student_count}</div>
       </div>
       <div class="summary-card">
-        <div class="label">Số buổi đã dạy</div>
-        <div class="value">${cls.session_count}</div>
+        <div class="label">Số buổi kỳ này</div>
+        <div class="value">${activeSessionCount} <span style="font-size:11px;color:var(--text-muted);font-weight:400;">(${cls.session_count} tổng)</span></div>
       </div>
       <div class="summary-card">
         <div class="label">TB có mặt / buổi</div>
         <div class="value">${cls.average_attendance}</div>
       </div>
-      <div class="summary-card">
-        <div class="label">Tổng doanh thu</div>
-        <div class="value money">${fmtVND(cls.total_revenue)}</div>
+      <div class="summary-card" style="position:relative;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="label">Doanh thu kỳ này</div>
+          <span class="active-badge">Kỳ hiện tại</span>
+        </div>
+        <div class="value money" style="margin:4px 0;">${fmtVND(activeRevenue)}</div>
+        <div class="revenue-card-actions">
+          <button type="button" class="btn-mini-settle" id="quickSettleBtn" title="Xuất PDF & Chốt kỳ doanh thu này">🔒 Chốt kỳ</button>
+          <button type="button" class="btn-mini-history" id="quickPeriodHistBtn" title="Xem lịch sử các kỳ đã chốt">📊 Lịch sử kỳ</button>
+        </div>
       </div>
     </div>
 
@@ -1906,6 +2509,21 @@ function renderMain() {
   document.getElementById('exportClassBtn').addEventListener('click', () => {
     exportCurrentClassPDF();
   });
+
+  const periodHistBtn = document.getElementById('openPeriodHistBtn');
+  if (periodHistBtn) periodHistBtn.addEventListener('click', () => openPeriodHistoryModal());
+
+  const quickHistBtn = document.getElementById('quickPeriodHistBtn');
+  if (quickHistBtn) quickHistBtn.addEventListener('click', () => openPeriodHistoryModal());
+
+  const quickSettleBtn = document.getElementById('quickSettleBtn');
+  if (quickSettleBtn) quickSettleBtn.addEventListener('click', () => openSettlePeriodModal());
+
+  const bannerSettleBtn = document.getElementById('bannerSettleBtn');
+  if (bannerSettleBtn) bannerSettleBtn.addEventListener('click', () => openSettlePeriodModal());
+
+  const bannerHistoryBtn = document.getElementById('bannerHistoryBtn');
+  if (bannerHistoryBtn) bannerHistoryBtn.addEventListener('click', () => openPeriodHistoryModal());
 
   // Date change event
   document.getElementById('sessionDate').addEventListener('change', async (e) => {
@@ -1977,7 +2595,6 @@ function renderMain() {
 
       if (!name) {
         showToast('Vui lòng nhập họ tên học sinh.', 'error');
-        document.getElementById('popStudentName').focus();
         return;
       }
       
@@ -2368,9 +2985,13 @@ function renderHistory() {
     const presentRecords = (s.records || []).filter(r => r.is_present);
     const isAllAbsent = presentRecords.length === 0;
 
-    const subText = isAllAbsent
+    let subText = isAllAbsent
       ? `<span style="color:var(--accent);font-weight:600;">🚫 Nghỉ cả lớp: ${escapeHtml(s.absence_reason || 'Vắng toàn bộ')}</span>`
       : `${presentRecords.length} học sinh có mặt`;
+      
+    if (s.is_settled) {
+      subText += ` · <span style="color:var(--text-muted);font-size:11px;">[Đã chốt kỳ]</span>`;
+    }
 
     const detailHTML = isAllAbsent
       ? `<div style="color:var(--accent);font-size:12px;padding:4px 0;">📌 <strong>Lý do nghỉ:</strong> ${escapeHtml(s.absence_reason || 'Không có ghi chú')}</div>`
@@ -2379,7 +3000,7 @@ function renderHistory() {
     item.innerHTML = `
       <div class="hist-row">
         <div>
-          <div class="hist-date">${fmtDateVN(s.session_date)}</div>
+          <div class="hist-date">${fmtDateVN(s.session_date)} ${s.is_settled ? '<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);">Đã chốt</span>' : ''}</div>
           <div class="hist-sub">${subText}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
@@ -2427,56 +3048,262 @@ function renderHistory() {
   });
 }
 
-/* ---------------- Export data as PDF for Current Selected Class ---------------- */
-async function exportCurrentClassPDF() {
-  if (!selectedClassId || !state.currentClass) {
-    showToast('Vui lòng chọn một lớp học để xuất PDF!', 'error');
-    return;
-  }
+/* =========================================================================
+   CHỐT DOANH THU & LỊCH SỬ KỲ (Settlement Modal, Period History, PDF Engine)
+   ========================================================================= */
 
+/* ---------------- Open Settle Period Modal ---------------- */
+async function openSettlePeriodModal() {
+  if (!selectedClassId || !state.currentClass) return;
   const cls = state.currentClass;
-  showToast(`Đang tạo báo cáo PDF cho lớp "${cls.name}"...`);
 
   try {
-    const students = await apiRequest(`/classes/${cls.id}/students`);
-    const sessions = await apiRequest(`/classes/${cls.id}/sessions`);
-    const totalRevenue = sessions.reduce((sum, s) => sum + (s.total_amount || 0), 0);
+    const revStatus = await apiRequest(`/classes/${cls.id}/revenue-status`);
+    if (revStatus.current_active_session_count === 0) {
+      showToast('Lớp hiện chưa có buổi học mới nào để chốt kỳ doanh thu.', 'error');
+      return;
+    }
 
-    let studentRows = '';
-    students.forEach((s, i) => {
-      studentRows += `<tr>
-        <td style="text-align:center;">${i + 1}</td>
-        <td>
-          <div style="font-weight:600;font-size:13px;">${escapeHtml(s.name)}</div>
-          ${s.school_name || s.school_class ? `<div style="font-size:11px;color:#666;margin-top:2px;">🏫 ${escapeHtml(s.school_name || '')} ${s.school_class ? `· Lớp ${escapeHtml(s.school_class)}` : ''}</div>` : ''}
-        </td>
-        <td style="font-family:monospace;font-size:12px;">${escapeHtml(s.parent_phone || '—')}</td>
-        <td style="text-align:right;font-family:monospace;font-weight:600;color:#2F6E4F;">${fmtVND(s.price_per_session)}</td>
-      </tr>`;
+    const now = new Date();
+    const defaultPeriodName = `Kỳ Tháng ${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+
+    showModal(`
+      <div class="modal-box modal-box-large">
+        <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+        <h3 class="display" style="padding-right:28px;">🔒 Chốt doanh thu kỳ này</h3>
+        <p>Báo cáo & đóng kỳ doanh thu cho lớp <strong>${escapeHtml(cls.name)}</strong>. Sau khi chốt, doanh thu kỳ mới sẽ bắt đầu từ 0₫.</p>
+
+        <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-xs);padding:14px;margin-bottom:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
+            <div>
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Số buổi chốt kỳ này</div>
+              <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${revStatus.current_active_session_count} buổi</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Doanh thu kỳ này</div>
+              <div style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--success);">${fmtVND(revStatus.current_active_revenue)}</div>
+            </div>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-secondary);">
+            📅 Khoảng thời gian: <strong>${revStatus.earliest_unsettled_date ? fmtDateVN(revStatus.earliest_unsettled_date) : '—'}</strong> đến <strong>${revStatus.latest_unsettled_date ? fmtDateVN(revStatus.latest_unsettled_date) : '—'}</strong>
+          </div>
+        </div>
+
+        <form id="settlePeriodForm">
+          <div style="margin-bottom:12px;">
+            <label>Tên kỳ doanh thu <span style="color:var(--accent);">*</span></label>
+            <input type="text" id="settlePeriodName" value="${escapeHtml(defaultPeriodName)}" required autocomplete="off" placeholder="Ví dụ: Kỳ Tháng 08/2026">
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <label>Ghi chú thêm (Tuỳ chọn)</label>
+            <input type="text" id="settlePeriodNotes" placeholder="Ghi chú về kỳ này..." autocomplete="off">
+          </div>
+
+          <div style="margin-bottom:16px;font-size:12.5px;color:var(--text-secondary);display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="autoPrintPdfCheckbox" checked style="width:auto;margin-bottom:0;cursor:pointer;">
+            <label for="autoPrintPdfCheckbox" style="margin-bottom:0;cursor:pointer;color:var(--text-primary);font-size:12.5px;">Tự động mở cửa sổ in & Xuất PDF báo cáo kỳ này</label>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
+            <button type="submit" class="confirm" id="confirmSettleBtn">🔒 Xác nhận Chốt & Xuất PDF</button>
+          </div>
+        </form>
+      </div>
+    `);
+
+    document.getElementById('settlePeriodForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const periodName = document.getElementById('settlePeriodName').value.trim();
+      const notes = document.getElementById('settlePeriodNotes').value.trim();
+      const autoPrint = document.getElementById('autoPrintPdfCheckbox').checked;
+
+      if (!periodName) {
+        showToast('Vui lòng nhập tên kỳ doanh thu.', 'error');
+        return;
+      }
+
+      const confirmBtn = document.getElementById('confirmSettleBtn');
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Đang chốt kỳ...';
+
+      try {
+        const closedPeriod = await apiRequest(`/classes/${cls.id}/revenue-periods/close`, {
+          method: 'POST',
+          body: JSON.stringify({
+            period_name: periodName,
+            notes: notes || null
+          })
+        });
+
+        closeModal();
+        showToast(`Đã chốt "${closedPeriod.period_name}" (${fmtVND(closedPeriod.total_revenue)}) và lưu vào lịch sử!`);
+        
+        // Auto print / export PDF if checked
+        if (autoPrint) {
+          await exportPeriodPDF(closedPeriod.id);
+        }
+
+        await loadClassData(cls.id);
+        await loadClasses(cls.id);
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi chốt kỳ doanh thu.', 'error');
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '🔒 Xác nhận Chốt & Xuất PDF';
+      }
     });
+  } catch (err) {
+    showToast('Lỗi khi tải thông tin kỳ doanh thu.', 'error');
+  }
+}
 
-    let sessionRows = '';
-    sessions.forEach(s => {
-      const presentRecords = (s.records || []).filter(r => r.is_present);
-      const isAllAbsent = presentRecords.length === 0;
-      const presentNames = isAllAbsent
-        ? `<span style="color:#C0392B;font-weight:600;">🚫 Nghỉ toàn lớp — Lý do: ${escapeHtml(s.absence_reason || 'Vắng cả lớp')}</span>`
-        : presentRecords.map(p => escapeHtml(p.student_name_snapshot)).join(', ');
-      const presentCount = presentRecords.length;
+/* ---------------- Open Period History Modal ---------------- */
+async function openPeriodHistoryModal() {
+  if (!selectedClassId || !state.currentClass) return;
+  const cls = state.currentClass;
 
-      sessionRows += `<tr>
-        <td style="text-align:center;font-family:monospace;font-weight:600;">${fmtDateVN(s.session_date)}</td>
-        <td style="text-align:center;font-weight:600;">${isAllAbsent ? '<span style="color:#C0392B;">0 (Nghỉ)</span>' : `${presentCount} / ${students.length}`}</td>
-        <td style="font-size:11.5px;line-height:1.4;">${presentNames}</td>
-        <td style="text-align:right;font-family:monospace;font-weight:600;color:${isAllAbsent ? '#888' : '#2F6E4F'};">${fmtVND(s.total_amount)}</td>
-      </tr>`;
-    });
+  showToast('Đang tải lịch sử các kỳ chốt doanh thu...');
+  try {
+    const periods = await apiRequest(`/classes/${cls.id}/revenue-periods`);
 
-    const printHTML = `<!DOCTYPE html>
+    let tableRowsHTML = '';
+    if (periods.length === 0) {
+      tableRowsHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Chưa có kỳ doanh thu nào được chốt trong lịch sử.<br>Khi đến kỳ, bạn bấm "🔒 Chốt kỳ" để lưu lại báo cáo.</td></tr>`;
+    } else {
+      periods.forEach((p, idx) => {
+        const dateRangeStr = (p.start_date && p.end_date)
+          ? `${fmtDateVN(p.start_date)} ➔ ${fmtDateVN(p.end_date)}`
+          : '—';
+        const closedDateStr = p.closed_at ? new Date(p.closed_at).toLocaleString('vi-VN') : '—';
+
+        tableRowsHTML += `
+          <tr>
+            <td>
+              <div style="font-weight:700;color:var(--text-primary);font-size:13px;">${escapeHtml(p.period_name)}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">📅 ${dateRangeStr}</div>
+              ${p.notes ? `<div style="font-size:11px;color:var(--accent);margin-top:2px;">📝 ${escapeHtml(p.notes)}</div>` : ''}
+            </td>
+            <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:600;">${p.session_count} buổi</td>
+            <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--success);font-size:13.5px;">${fmtVND(p.total_revenue)}</td>
+            <td style="font-size:11.5px;color:var(--text-secondary);">${closedDateStr}</td>
+            <td style="text-align:right;">
+              <div style="display:flex;gap:6px;justify-content:flex-end;">
+                <button type="button" class="btn-table-action" onclick="exportPeriodPDF('${p.id}')" title="Xuất lại file PDF chuẩn Rocket Learners cho kỳ này">
+                  📄 Xuất PDF
+                </button>
+                <button type="button" class="btn-table-action undo" onclick="promptReopenPeriod('${p.id}', '${escapeHtml(p.period_name)}')" title="Hoàn tác mở lại kỳ này nếu ấn nhầm">
+                  ↩️ Mở lại
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    showModal(`
+      <div class="modal-box" style="width:720px;max-width:94vw;">
+        <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-right:28px;margin-bottom:12px;">
+          <div>
+            <h3 class="display" style="margin:0;font-size:18px;">📊 Lịch sử các kỳ doanh thu đã chốt</h3>
+            <p style="margin:4px 0 0;font-size:12.5px;color:var(--text-secondary);">Lớp: <strong>${escapeHtml(cls.name)}</strong> · ${periods.length} kỳ trong lịch sử</p>
+          </div>
+        </div>
+
+        <div style="max-height:55vh;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-xs);">
+          <table class="period-hist-table" style="margin-top:0;">
+            <thead>
+              <tr>
+                <th>Tên kỳ & Thời gian</th>
+                <th style="text-align:center;">Số buổi</th>
+                <th style="text-align:right;">Doanh thu</th>
+                <th>Ngày giờ chốt</th>
+                <th style="text-align:right;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHTML}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `);
+  } catch (err) {
+    showToast('Lỗi khi tải lịch sử kỳ doanh thu.', 'error');
+  }
+}
+
+/* ---------------- Reopen / Undo Period ---------------- */
+function promptReopenPeriod(periodId, periodName) {
+  showModal(`
+    <div class="modal-box">
+      <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+      <h3 class="display" style="padding-right:28px;">↩️ Hoàn tác mở lại kỳ</h3>
+      <p>Bạn có chắc muốn mở lại <strong>"${periodName}"</strong>?<br>
+      Toàn bộ các buổi học trong kỳ này sẽ được trả về kỳ hiện tại để tính doanh thu tiếp tục.</p>
+      <div class="modal-actions">
+        <button type="button" class="cancel" onclick="openPeriodHistoryModal()">Huỷ</button>
+        <button type="button" class="confirm" id="confirmReopenBtn" style="background:#e67e22;">Xác nhận Mở lại kỳ</button>
+      </div>
+    </div>
+  `);
+
+  document.getElementById('confirmReopenBtn').addEventListener('click', async () => {
+    try {
+      const res = await apiRequest(`/classes/${selectedClassId}/revenue-periods/${periodId}/reopen`, {
+        method: 'POST'
+      });
+      closeModal();
+      showToast(res.message || 'Đã mở lại kỳ doanh thu thành công!');
+      await loadClassData(selectedClassId);
+      await loadClasses(selectedClassId);
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi mở lại kỳ.', 'error');
+    }
+  });
+}
+
+/* ---------------- Reusable PDF Generator Engine ---------------- */
+function generateClassPDFReport({ cls, students, sessions, periodTitle, totalRevenue }) {
+  const finalTotal = totalRevenue !== undefined ? totalRevenue : sessions.reduce((sum, s) => sum + (s.total_amount || 0), 0);
+
+  let studentRows = '';
+  students.forEach((s, i) => {
+    studentRows += `<tr>
+      <td style="text-align:center;">${i + 1}</td>
+      <td>
+        <div style="font-weight:600;font-size:13px;">${escapeHtml(s.name)}</div>
+        ${s.school_name || s.school_class ? `<div style="font-size:11px;color:#666;margin-top:2px;">🏫 ${escapeHtml(s.school_name || '')} ${s.school_class ? `· Lớp ${escapeHtml(s.school_class)}` : ''}</div>` : ''}
+      </td>
+      <td style="font-family:monospace;font-size:12px;">${escapeHtml(s.parent_phone || '—')}</td>
+      <td style="text-align:right;font-family:monospace;font-weight:600;color:#2F6E4F;">${fmtVND(s.price_per_session)}</td>
+    </tr>`;
+  });
+
+  let sessionRows = '';
+  sessions.forEach(s => {
+    const presentRecords = (s.records || []).filter(r => r.is_present);
+    const isAllAbsent = presentRecords.length === 0;
+    const presentNames = isAllAbsent
+      ? `<span style="color:#C0392B;font-weight:600;">🚫 Nghỉ toàn lớp — Lý do: ${escapeHtml(s.absence_reason || 'Vắng cả lớp')}</span>`
+      : presentRecords.map(p => escapeHtml(p.student_name_snapshot)).join(', ');
+    const presentCount = presentRecords.length;
+
+    sessionRows += `<tr>
+      <td style="text-align:center;font-family:monospace;font-weight:600;">${fmtDateVN(s.session_date)}</td>
+      <td style="text-align:center;font-weight:600;">${isAllAbsent ? '<span style="color:#C0392B;">0 (Nghỉ)</span>' : `${presentCount} / ${students.length}`}</td>
+      <td style="font-size:11.5px;line-height:1.4;">${presentNames}</td>
+      <td style="text-align:right;font-family:monospace;font-weight:600;color:${isAllAbsent ? '#888' : '#2F6E4F'};">${fmtVND(s.total_amount)}</td>
+    </tr>`;
+  });
+
+  const printHTML = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Báo Cáo Điểm Danh — Lớp ${escapeHtml(cls.name)}</title>
+  <title>Báo Cáo Điểm Danh — ${escapeHtml(periodTitle || 'Lớp ' + cls.name)}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -2527,10 +3354,21 @@ async function exportCurrentClassPDF() {
       text-transform: uppercase;
       color: #1B365D;
     }
+    .header .period-badge {
+      display: inline-block;
+      background: #fdf3e8;
+      border: 1px solid #e67e22;
+      color: #d35400;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin: 6px 0;
+    }
     .header .class-title {
       font-size: 18px;
       font-weight: 700;
-      color: #D44A48;
+      color: #1B365D;
       margin: 4px 0;
     }
     .header .subtitle {
@@ -2643,8 +3481,9 @@ async function exportCurrentClassPDF() {
         <div class="logo-text-sub">ENGLISH FOR A BRIGHTER FUTURE</div>
       </div>
     </div>
-    <h1>BÁO CÁO ĐIỂM DANH LỚP HỌC</h1>
+    <h1>BÁO CÁO ĐIỂM DANH & DOANH THU</h1>
     <div class="class-title">Lớp: ${escapeHtml(cls.name)}</div>
+    ${periodTitle ? `<div class="period-badge">🏷️ ${escapeHtml(periodTitle)}</div>` : ''}
     <div class="subtitle">Giáo viên phụ trách: <strong>${escapeHtml(currentUser ? currentUser.full_name : '')}</strong></div>
     <div class="export-date">Ngày xuất: ${new Date().toLocaleString('vi-VN')}</div>
   </div>
@@ -2653,7 +3492,7 @@ async function exportCurrentClassPDF() {
     <div class="stat-item"><div class="lbl">Sĩ số</div><div class="val">${students.length} HS</div></div>
     <div class="stat-item"><div class="lbl">Số buổi học</div><div class="val">${sessions.length}</div></div>
     <div class="stat-item"><div class="lbl">TB có mặt</div><div class="val">${cls.average_attendance || 0} HS</div></div>
-    <div class="stat-item"><div class="lbl">Tổng doanh thu</div><div class="val green">${fmtVND(totalRevenue)}</div></div>
+    <div class="stat-item"><div class="lbl">Tổng doanh thu</div><div class="val green">${fmtVND(finalTotal)}</div></div>
   </div>
 
   <h3>Danh sách học sinh (${students.length})</h3>
@@ -2671,8 +3510,8 @@ async function exportCurrentClassPDF() {
   </table>` : '<p class="empty">Chưa có buổi điểm danh nào.</p>'}
 
   <div class="revenue-box">
-    <span>TỔNG DOANH THU LỚP ${escapeHtml(cls.name.toUpperCase())}</span>
-    <span class="revenue-amount">${fmtVND(totalRevenue)}</span>
+    <span>TỔNG DOANH THU BÁO CÁO (${escapeHtml(cls.name.toUpperCase())})</span>
+    <span class="revenue-amount">${fmtVND(finalTotal)}</span>
   </div>
 
   <div class="footer">Rocket Learners · Sổ Điểm Danh · Lớp ${escapeHtml(cls.name)} · Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}</div>
@@ -2684,15 +3523,58 @@ async function exportCurrentClassPDF() {
 </body>
 </html>`;
 
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(printHTML);
-      printWindow.document.close();
-    } else {
-      showToast('Trình duyệt đã chặn popup. Vui lòng cho phép mở popup.', 'error');
-    }
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(printHTML);
+    printWindow.document.close();
+  } else {
+    showToast('Trình duyệt đã chặn popup. Vui lòng cho phép mở popup.', 'error');
+  }
+}
+
+/* ---------------- Export data as PDF for Current Selected Class ---------------- */
+async function exportCurrentClassPDF() {
+  if (!selectedClassId || !state.currentClass) {
+    showToast('Vui lòng chọn một lớp học để xuất PDF!', 'error');
+    return;
+  }
+
+  const cls = state.currentClass;
+  showToast(`Đang tạo báo cáo PDF cho lớp "${cls.name}"...`);
+
+  try {
+    const students = await apiRequest(`/classes/${cls.id}/students`);
+    const sessions = await apiRequest(`/classes/${cls.id}/sessions`);
+    generateClassPDFReport({
+      cls,
+      students,
+      sessions,
+      periodTitle: 'Toàn bộ Lịch sử & Kỳ hiện tại'
+    });
   } catch (err) {
     showToast('Lỗi khi xuất dữ liệu PDF cho lớp.', 'error');
+  }
+}
+
+/* ---------------- Export data as PDF for a Specific Period ---------------- */
+async function exportPeriodPDF(periodId) {
+  if (!selectedClassId || !state.currentClass) return;
+  const cls = state.currentClass;
+
+  showToast('Đang tải dữ liệu kỳ để xuất PDF...');
+  try {
+    const periodDetail = await apiRequest(`/classes/${cls.id}/revenue-periods/${periodId}`);
+    const students = await apiRequest(`/classes/${cls.id}/students`);
+    
+    generateClassPDFReport({
+      cls,
+      students,
+      sessions: periodDetail.sessions || [],
+      periodTitle: periodDetail.period_name,
+      totalRevenue: periodDetail.total_revenue
+    });
+  } catch (err) {
+    showToast('Lỗi khi xuất PDF cho kỳ này.', 'error');
   }
 }
 
