@@ -1977,8 +1977,18 @@ function renderMain() {
 
       if (!name) {
         showToast('Vui lòng nhập họ tên học sinh.', 'error');
+        document.getElementById('popStudentName').focus();
         return;
       }
+      
+      // Kiểm tra trùng tên học sinh trong cùng lớp
+      const isDuplicate = students.some(st => st.name.trim().toLowerCase() === name.toLowerCase());
+      if (isDuplicate) {
+        showToast(`Lớp đã có học sinh tên "${name}". Vui lòng thêm họ, tên đệm hoặc ký hiệu phân biệt để tránh trùng tên!`, 'error');
+        document.getElementById('popStudentName').focus();
+        return;
+      }
+
       if (!priceRaw || isNaN(price)) {
         showToast('Vui lòng nhập mức học phí hợp lệ.', 'error');
         return;
@@ -2264,6 +2274,14 @@ function renderRoster(students) {
           return;
         }
 
+        // Kiểm tra trùng tên với học sinh khác trong cùng lớp
+        const isDuplicate = students.some(st => st.id !== s.id && st.name.trim().toLowerCase() === newName.toLowerCase());
+        if (isDuplicate) {
+          showToast(`Lớp đã có học sinh tên "${newName}". Vui lòng thêm họ, tên đệm hoặc ký hiệu phân biệt để tránh trùng tên!`, 'error');
+          document.getElementById('editStudentName').focus();
+          return;
+        }
+
         try {
           await apiRequest(`/classes/${selectedClassId}/students/${s.id}`, {
             method: 'PUT',
@@ -2281,7 +2299,7 @@ function renderRoster(students) {
           await loadClassData(selectedClassId);
           await loadClasses(selectedClassId);
         } catch (err) {
-          showToast('Cập nhật học sinh thất bại.', 'error');
+          showToast(err.message || 'Cập nhật học sinh thất bại.', 'error');
         }
       });
 
