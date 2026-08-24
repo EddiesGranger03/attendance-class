@@ -51,6 +51,7 @@ class AttendanceRecord(Base):
     student_name_snapshot = Column(String(255), nullable=False)
     price_snapshot = Column(Float, nullable=False, default=0.0)
     is_present = Column(Boolean, nullable=False, default=False)
+    note = Column(String(500), nullable=True, default=None)  # Ghi chú / Lưu ý riêng theo ngày của học sinh
 
     # Relationships
     session = relationship("AttendanceSession", back_populates="records")

@@ -64,7 +64,8 @@ def get_sessions(
                 student_id=r.student_id,
                 student_name_snapshot=r.student_name_snapshot,
                 price_snapshot=r.price_snapshot,
-                is_present=r.is_present
+                is_present=r.is_present,
+                note=r.note
             ) for r in s.records
         ]
         present_count = len([r for r in s.records if r.is_present])
@@ -90,7 +91,7 @@ def get_daily_attendance_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Any:
-    """Lấy trạng thái điểm danh đã lưu của một ngày cụ thể."""
+    """Lấy trạng thái điểm danh đã lưu của một ngày cụ thể (kèm ghi chú học sinh)."""
     verify_classroom_ownership(class_id, current_user.id, db)
     
     session = db.query(AttendanceSession).filter(
@@ -103,16 +104,19 @@ def get_daily_attendance_status(
             classroom_id=class_id,
             date=target_date,
             present_student_ids=[],
+            student_notes={},
             has_saved_session=False,
             session_id=None,
             total_amount=0.0
         )
         
     present_ids = [r.student_id for r in session.records if r.is_present and r.student_id is not None]
+    student_notes = {r.student_id: r.note for r in session.records if r.student_id is not None and r.note}
     return DailyStatusResponse(
         classroom_id=class_id,
         date=target_date,
         present_student_ids=present_ids,
+        student_notes=student_notes,
         has_saved_session=True,
         session_id=session.id,
         total_amount=session.total_amount,
@@ -127,7 +131,7 @@ def record_attendance_session(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Any:
-    """Lưu buổi điểm danh mới (tự động tính tổng tiền dựa trên các học sinh có mặt)."""
+    """Lưu buổi điểm danh mới (tự động tính tổng tiền và lưu ghi chú từng học sinh)."""
     verify_classroom_ownership(class_id, current_user.id, db)
     
     students = db.query(Student).filter(Student.classroom_id == class_id).all()
@@ -167,9 +171,16 @@ def record_attendance_session(
     db.add(new_session)
     db.flush()  # populate new_session.id
     
+    student_notes_in = session_in.student_notes or {}
     records = []
     for st in students:
         is_present = st.id in present_set
+        st_note = student_notes_in.get(st.id)
+        if st_note:
+            st_note = st_note.strip() or None
+        else:
+            st_note = None
+
         if is_present:
             total_amount += st.price_per_session
 
@@ -178,7 +189,8 @@ def record_attendance_session(
             student_id=st.id,
             student_name_snapshot=st.name,
             price_snapshot=st.price_per_session,
-            is_present=is_present
+            is_present=is_present,
+            note=st_note
         )
         db.add(rec)
         records.append(rec)
@@ -193,7 +205,8 @@ def record_attendance_session(
             student_id=r.student_id,
             student_name_snapshot=r.student_name_snapshot,
             price_snapshot=r.price_snapshot,
-            is_present=r.is_present
+            is_present=r.is_present,
+            note=r.note
         ) for r in new_session.records
     ]
     present_count = len([r for r in new_session.records if r.is_present])
@@ -388,7 +401,8 @@ def get_revenue_period_detail(
                 student_id=r.student_id,
                 student_name_snapshot=r.student_name_snapshot,
                 price_snapshot=r.price_snapshot,
-                is_present=r.is_present
+                is_present=r.is_present,
+                note=r.note
             ) for r in s.records
         ]
         session_responses.append(SessionResponse(

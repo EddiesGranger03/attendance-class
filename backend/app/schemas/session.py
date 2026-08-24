@@ -9,6 +9,7 @@ class AttendanceRecordResponse(BaseModel):
     student_name_snapshot: str
     price_snapshot: float
     is_present: bool
+    note: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -17,6 +18,7 @@ class AttendanceRecordResponse(BaseModel):
 class SessionCreate(BaseModel):
     session_date: date
     present_student_ids: List[str] = Field(default_factory=list)
+    student_notes: Optional[dict[str, str]] = Field(default_factory=dict)
     absence_reason: Optional[str] = Field(None, max_length=500)  # Bắt buộc khi 0 học sinh có mặt
 
 
@@ -40,6 +42,7 @@ class DailyStatusResponse(BaseModel):
     classroom_id: str
     date: date
     present_student_ids: List[str] = []
+    student_notes: dict[str, str] = {}
     has_saved_session: bool = False
     session_id: Optional[str] = None
     total_amount: float = 0.0

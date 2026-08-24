@@ -1573,6 +1573,77 @@
   .att-table .redit:hover { color: var(--accent); background: var(--accent-glow); }
   .roster-empty { padding: 30px 14px; color: var(--text-muted); font-size: 13.5px; text-align: center; }
 
+  /* Per-student Note Input */
+  .att-table .note-cell {
+    min-width: 170px;
+    max-width: 260px;
+  }
+  .student-note-input {
+    width: 100%;
+    padding: 7px 11px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text-primary);
+    font-size: 12.5px;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+  }
+  .student-note-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--bg-input-focus);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+  .student-note-input::placeholder {
+    color: var(--text-muted);
+    font-size: 11.5px;
+  }
+
+  /* History Student Records & Badges */
+  .hist-student-row {
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  [data-theme="light"] .hist-student-row {
+    border-bottom-color: rgba(80, 65, 50, 0.1);
+  }
+  .hist-student-row:last-child {
+    border-bottom: none;
+  }
+  .hist-badge-pres {
+    font-size: 10.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--success-bg);
+    color: var(--success);
+    font-weight: 700;
+  }
+  .hist-badge-abs {
+    font-size: 10.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 110, 108, 0.12);
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .hist-student-note {
+    font-size: 11.5px;
+    color: var(--accent);
+    background: rgba(224, 83, 73, 0.08);
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(224, 83, 73, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 4px;
+  }
+
   /* Total strip */
   .total-strip {
     display: flex; align-items: center; justify-content: space-between; gap: 14px;
@@ -2378,6 +2449,7 @@ let state = {
 let selectedClassId = localStorage.getItem('attendance_selected_class_id') || null;
 let currentDate = todayStr();
 let checkedIds = new Set();
+let studentNotes = {};
 let clockInterval = null;
 
 /* ---------------- API Helper (with Cloud Direct Fallback) ---------------- */
@@ -2923,8 +2995,9 @@ async function loadClassData(classId) {
     state.students = students;
     state.sessions = sessions;
 
-    // Restore checked IDs from backend daily status
+    // Restore checked IDs and student notes from backend daily status
     checkedIds = new Set(dailyStatus.present_student_ids || []);
+    studentNotes = dailyStatus.student_notes || {};
 
     renderMain();
   } catch (err) {
@@ -3099,10 +3172,12 @@ function renderMain() {
     try {
       const daily = await apiRequest(`/classes/${selectedClassId}/daily/${currentDate}`);
       checkedIds = new Set(daily.present_student_ids || []);
+      studentNotes = daily.student_notes || {};
       renderRoster(students);
       updateTotals(students);
     } catch (err) {
       checkedIds = new Set();
+      studentNotes = {};
       renderRoster(students);
       updateTotals(students);
     }
@@ -3257,6 +3332,7 @@ function renderMain() {
             body: JSON.stringify({
               session_date: currentDate,
               present_student_ids: [],
+              student_notes: studentNotes,
               absence_reason: reason
             })
           });
@@ -3285,6 +3361,7 @@ function renderMain() {
         body: JSON.stringify({
           session_date: currentDate,
           present_student_ids: [...checkedIds],
+          student_notes: studentNotes,
           absence_reason: null
         })
       });
@@ -3325,6 +3402,7 @@ function renderRoster(students) {
             <th>Học phí / buổi</th>
             <th class="center">Absent</th>
             <th class="center">Attendance</th>
+            <th>Ghi chú trong ngày</th>
             <th></th>
           </tr>
         </thead>
@@ -3379,6 +3457,9 @@ function renderRoster(students) {
           <span class="radio-mark"><span class="dot"></span></span>
         </label>
       </td>
+      <td class="note-cell">
+        <input type="text" class="student-note-input" placeholder="Ghi chú (nghỉ ốm, muộn...)" value="${escapeHtml(studentNotes[s.id] || '')}" data-sid="${s.id}" autocomplete="off">
+      </td>
       <td class="action-cell">
         <button class="redit" data-id="${s.id}" title="Sửa / xoá học sinh">⋯</button>
       </td>
@@ -3399,6 +3480,18 @@ function renderRoster(students) {
         updateTotals(students);
       });
     });
+
+    const noteInput = tr.querySelector('.student-note-input');
+    if (noteInput) {
+      noteInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        if (val) {
+          studentNotes[s.id] = e.target.value;
+        } else {
+          delete studentNotes[s.id];
+        }
+      });
+    }
 
     // Edit / Delete Student Modal
     tr.querySelector('.redit').addEventListener('click', () => {
@@ -3550,7 +3643,8 @@ function renderHistory() {
     item.className = 'hist-item';
     item.style.animationDelay = `${index * 0.03}s`;
 
-    const presentRecords = (s.records || []).filter(r => r.is_present);
+    const records = s.records || [];
+    const presentRecords = records.filter(r => r.is_present);
     const isAllAbsent = presentRecords.length === 0;
 
     let subText = isAllAbsent
@@ -3562,8 +3656,17 @@ function renderHistory() {
     }
 
     const detailHTML = isAllAbsent
-      ? `<div style="color:var(--accent);font-size:12px;padding:4px 0;">📌 <strong>Lý do nghỉ:</strong> ${escapeHtml(s.absence_reason || 'Không có ghi chú')}</div>`
-      : presentRecords.map(p => `<span style="display:inline-block;margin-right:4px;">•</span> ${escapeHtml(p.student_name_snapshot)} — <span class="mono" style="color:var(--success);">${fmtVND(p.price_snapshot)}</span>`).join('<br>');
+      ? `<div style="color:var(--accent);font-size:12px;padding:4px 0;">📌 <strong>Lý do nghỉ cả lớp:</strong> ${escapeHtml(s.absence_reason || 'Không có ghi chú')}</div>`
+      : records.map(p => {
+          const isPres = p.is_present;
+          const noteHTML = p.note ? `<span class="hist-student-note">💬 <em>Ghi chú: ${escapeHtml(p.note)}</em></span>` : '';
+          const statusBadge = isPres
+            ? `<span class="hist-badge-pres">[Có mặt]</span>`
+            : `<span class="hist-badge-abs">[Vắng]</span>`;
+          const moneyText = isPres ? fmtVND(p.price_snapshot) : '0₫';
+          const color = isPres ? 'var(--success)' : 'var(--text-muted)';
+          return `<div class="hist-student-row"><span style="color:${color};font-weight:600;">${statusBadge} ${escapeHtml(p.student_name_snapshot)}</span> — <span class="mono" style="color:${color};">${moneyText}</span>${noteHTML}</div>`;
+        }).join('');
 
     item.innerHTML = `
       <div class="hist-row">
@@ -3852,17 +3955,22 @@ function generateClassPDFReport({ cls, students, sessions, periodTitle, totalRev
 
   let sessionRows = '';
   sessions.forEach(s => {
-    const presentRecords = (s.records || []).filter(r => r.is_present);
+    const records = s.records || [];
+    const presentRecords = records.filter(r => r.is_present);
     const isAllAbsent = presentRecords.length === 0;
-    const presentNames = isAllAbsent
+    const sessionDetails = isAllAbsent
       ? `<span style="color:#C0392B;font-weight:600;">🚫 Nghỉ toàn lớp — Lý do: ${escapeHtml(s.absence_reason || 'Vắng cả lớp')}</span>`
-      : presentRecords.map(p => escapeHtml(p.student_name_snapshot)).join(', ');
+      : records.map(p => {
+          const status = p.is_present ? '' : ' <span style="color:#C0392B;font-size:10.5px;font-weight:600;">[Vắng]</span>';
+          const noteText = p.note ? ` <em style="color:#D35400;font-size:11px;">(💬 ${escapeHtml(p.note)})</em>` : '';
+          return `${escapeHtml(p.student_name_snapshot)}${status}${noteText}`;
+        }).join(', ');
     const presentCount = presentRecords.length;
 
     sessionRows += `<tr>
       <td style="text-align:center;font-family:monospace;font-weight:600;">${fmtDateVN(s.session_date)}</td>
       <td style="text-align:center;font-weight:600;">${isAllAbsent ? '<span style="color:#C0392B;">0 (Nghỉ)</span>' : `${presentCount} / ${students.length}`}</td>
-      <td style="font-size:11.5px;line-height:1.4;">${presentNames}</td>
+      <td style="font-size:11.5px;line-height:1.4;">${sessionDetails}</td>
       <td style="text-align:right;font-family:monospace;font-weight:600;color:${isAllAbsent ? '#888' : '#2F6E4F'};">${fmtVND(s.total_amount)}</td>
     </tr>`;
   });

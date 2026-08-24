@@ -40,10 +40,12 @@ def auto_migrate():
                 conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN IF NOT EXISTS absence_reason VARCHAR(500);"))
                 conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN IF NOT EXISTS period_id VARCHAR(36);"))
                 conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN IF NOT EXISTS is_settled BOOLEAN DEFAULT FALSE;"))
+                conn.execute(text("ALTER TABLE attendance_records ADD COLUMN IF NOT EXISTS note VARCHAR(500);"))
             elif engine.dialect.name == "sqlite":
                 conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN absence_reason VARCHAR(500);"))
                 conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN period_id VARCHAR(36);"))
                 conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN is_settled BOOLEAN DEFAULT 0;"))
+                conn.execute(text("ALTER TABLE attendance_records ADD COLUMN note VARCHAR(500);"))
             conn.commit()
         except Exception:
             pass
