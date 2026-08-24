@@ -17,7 +17,8 @@ backend/.env
 *.db
 *.sqlite3
 attendance.db
-database/
+database/*.db
+database/*.sqlite3
 
 # IDE & OS
 .vscode/

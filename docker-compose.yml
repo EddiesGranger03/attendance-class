@@ -35,6 +35,10 @@ services:
       USE_SQLITE_FALLBACK: "false"
     ports:
       - "8000:8000"
+    volumes:
+      - ./front-end:/app/front-end
+      - ./image:/app/image
+      - ./database:/app/database
     depends_on:
       db:
         condition: service_healthy

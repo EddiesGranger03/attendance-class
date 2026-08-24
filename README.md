@@ -51,9 +51,9 @@ docker compose up --build
    uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
    ```
 4. Mở trình duyệt truy cập:
-   * [http://127.0.0.1:8000](http://127.0.0.1:8000) hoặc mở trực tiếp file `diem-danh-lop-hoc.html`.
+   * [http://127.0.0.1:8000](http://127.0.0.1:8000) hoặc mở trực tiếp file `front-end/diem-danh-lop-hoc.html`.
 
-*(Lưu ý: Nếu bạn chưa bật PostgreSQL server ở local, backend sẽ tự động kích hoạt SQLite `attendance.db` để bạn có thể test ngay lập tức mà không gặp bất kỳ lỗi nào).*
+*(Lưu ý: Nếu bạn chưa bật PostgreSQL server ở local, backend sẽ tự động kích hoạt SQLite `database/attendance.db` để bạn có thể test ngay lập tức mà không gặp bất kỳ lỗi nào).*
 
 ---
 

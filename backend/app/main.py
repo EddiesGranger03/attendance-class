@@ -81,12 +81,16 @@ app.include_router(sessions_router, prefix=settings.API_V1_STR)
 
 @app.get("/", tags=["Root"])
 def root():
-    # If the HTML frontend file exists in parent directory, serve it or return API status
-    for candidate in [
+    # If the HTML frontend file exists in front-end directory or parent directories, serve it
+    candidates = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "front-end", "diem-danh-lop-hoc.html")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "front-end", "diem-danh-lop-hoc.html")),
         os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "diem-danh-lop-hoc.html")),
         os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "diem-danh-lop-hoc.html")),
+        "/app/front-end/diem-danh-lop-hoc.html",
         "/app/diem-danh-lop-hoc.html"
-    ]:
+    ]
+    for candidate in candidates:
         if os.path.exists(candidate):
             return FileResponse(candidate, media_type="text/html")
     return {
@@ -97,12 +101,17 @@ def root():
 
 
 @app.get("/logo.png", tags=["Assets"])
+@app.get("/image/logo.png", tags=["Assets"])
 def get_logo():
-    for candidate in [
+    candidates = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "image", "logo.png")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "image", "logo.png")),
         os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "logo.png")),
         os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "logo.png")),
+        "/app/image/logo.png",
         "/app/logo.png"
-    ]:
+    ]
+    for candidate in candidates:
         if os.path.exists(candidate):
             return FileResponse(candidate, media_type="image/png")
     return {"error": "Logo not found"}
