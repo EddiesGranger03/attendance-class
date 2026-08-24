@@ -1,0 +1,2715 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sổ Điểm Danh — Quản Lý Lớp Học</title>
+<meta name="description" content="Công cụ điểm danh lớp học dành riêng cho giáo viên. Quản lý lớp học, học sinh, và tính học phí tự động.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Dark Theme (Mặc định) */
+    --bg-deep: #0F0E17;
+    --bg-surface: #1A1927;
+    --bg-card: rgba(30, 29, 46, 0.85);
+    --bg-card-hover: rgba(38, 37, 58, 0.9);
+    --bg-input: rgba(255, 255, 255, 0.04);
+    --bg-input-focus: rgba(255, 255, 255, 0.08);
+    --text-primary: #FFFFFE;
+    --text-secondary: #A7A9BE;
+    --text-muted: #6B6D7B;
+    --accent: #FF6E6C;
+    --accent-glow: rgba(255, 110, 108, 0.25);
+    --accent-dark: #D44A48;
+    --success: #67D4A0;
+    --success-bg: rgba(103, 212, 160, 0.12);
+    --success-glow: rgba(103, 212, 160, 0.3);
+    --border: rgba(255, 255, 255, 0.06);
+    --border-accent: rgba(255, 110, 108, 0.3);
+    --glass: rgba(255, 255, 255, 0.03);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+    --shadow-glow: 0 0 30px rgba(255, 110, 108, 0.15);
+    --topbar-bg: rgba(15, 14, 23, 0.85);
+    --clock-bg: linear-gradient(135deg, rgba(255,110,108,0.06), rgba(103,212,160,0.04));
+    --table-head-bg: rgba(255,255,255,0.03);
+    --table-hover: rgba(255,255,255,0.03);
+    --table-present-bg: rgba(103, 212, 160, 0.04);
+    --table-present-hover: rgba(103, 212, 160, 0.07);
+    --tag-bg: rgba(255,255,255,0.04);
+    --tag-color: var(--text-muted);
+    --modal-overlay: rgba(0,0,0,0.6);
+    --radius: 14px;
+    --radius-sm: 10px;
+    --radius-xs: 8px;
+    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Light Theme (Màu kem ấm áp, thanh lịch, gần gũi, dịu mắt cho giáo viên) */
+  [data-theme="light"] {
+    --bg-deep: #FAF6ED;          /* Nền màu kem ấm mịn màng */
+    --bg-surface: #F0E9DC;       /* Mặt phẳng kem sữa đậm hơn */
+    --bg-card: #FFFFFF;          /* Card trắng kem tinh tế */
+    --bg-card-hover: #FCFAF6;
+    --bg-input: #EFE8DA;         /* Input màu kem nhạt */
+    --bg-input-focus: #FFFFFF;
+    --text-primary: #2C2621;     /* Nâu đen ấm áp, dễ chịu cho mắt */
+    --text-secondary: #635A50;   /* Xám nâu êm dịu */
+    --text-muted: #8E8376;       /* Text phụ */
+    --accent: #E05349;           /* Đỏ cam san hô ấm cúng */
+    --accent-glow: rgba(224, 83, 73, 0.2);
+    --accent-dark: #C64137;
+    --success: #288C5A;          /* Xanh lá ấm sâu */
+    --success-bg: rgba(40, 140, 90, 0.1);
+    --success-glow: rgba(40, 140, 90, 0.2);
+    --border: rgba(80, 65, 50, 0.1);
+    --border-accent: rgba(224, 83, 73, 0.35);
+    --glass: rgba(120, 100, 80, 0.04);
+    --shadow-sm: 0 1px 3px rgba(80, 60, 40, 0.05);
+    --shadow-md: 0 4px 18px rgba(80, 60, 40, 0.07);
+    --shadow-lg: 0 10px 35px rgba(80, 60, 40, 0.1);
+    --shadow-glow: 0 0 25px rgba(224, 83, 73, 0.1);
+    --topbar-bg: rgba(250, 246, 237, 0.92);
+    --clock-bg: linear-gradient(135deg, rgba(224, 83, 73, 0.07), rgba(40, 140, 90, 0.06));
+    --table-head-bg: #F2ECE0;
+    --table-hover: #F8F5EE;
+    --table-present-bg: rgba(40, 140, 90, 0.05);
+    --table-present-hover: rgba(40, 140, 90, 0.08);
+    --tag-bg: #EDE6D8;
+    --tag-color: #5C5348;
+    --modal-overlay: rgba(45, 39, 33, 0.45);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color var(--transition), color var(--transition);
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 600px 600px at 15% 20%, var(--accent-glow) 0%, transparent 60%),
+      radial-gradient(ellipse 500px 500px at 85% 80%, var(--success-glow) 0%, transparent 60%),
+      radial-gradient(ellipse 400px 400px at 50% 50%, rgba(120, 100, 255, 0.02) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+    transition: background var(--transition);
+  }
+
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  .display { font-family: 'Fraunces', serif; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  /* ========== AUTH / LOCK SCREEN ========== */
+  #authScreen {
+    position: fixed; inset: 0;
+    background: var(--bg-deep);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  @keyframes stampIn {
+    0% { transform: scale(0.3) rotate(-20deg); opacity: 0; }
+    60% { transform: scale(1.15) rotate(2deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-6deg); opacity: 1; }
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .auth-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    padding: 40px 34px;
+    width: 400px;
+    max-width: 92vw;
+    animation: slideUp 0.5s ease 0.15s both;
+  }
+  .auth-card .stamp-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+    animation: stampIn 0.6s ease 0.3s both;
+    box-shadow: 0 0 25px var(--accent-glow);
+  }
+  .auth-card h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--text-primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .auth-card .sub-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* Auth Tabs */
+  .auth-tabs {
+    display: flex;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 3px;
+    margin-bottom: 20px;
+  }
+  .auth-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .auth-tab.active {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .auth-form-group {
+    margin-bottom: 14px;
+  }
+  .auth-form-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .auth-form-group input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+  }
+  .auth-form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    background: var(--bg-input-focus);
+  }
+  .auth-error {
+    color: var(--accent);
+    font-size: 12px;
+    min-height: 18px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  /* ========== BUTTONS ========== */
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled {
+    background: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-secondary {
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 8px 14px;
+    font-size: 12.5px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+  }
+  .btn-secondary:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+    background: var(--bg-input-focus);
+  }
+
+  .btn-success {
+    width: 100%;
+    background: linear-gradient(135deg, #2F8F5E, #247A4E);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 13px 20px;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+  }
+  .btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px var(--success-glow);
+  }
+  .btn-success:active { transform: translateY(0); }
+  .btn-success:disabled {
+    background: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ========== LAYOUT ========== */
+  #app { display: none; min-height: 100vh; position: relative; z-index: 1; }
+
+  header.topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--topbar-bg);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background-color var(--transition), border-color var(--transition);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .brand-logo-img {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: #ffffff;
+    padding: 2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 1px solid var(--border);
+    transition: transform var(--transition);
+  }
+  .brand:hover .brand-logo-img {
+    transform: scale(1.08) rotate(-2deg);
+  }
+  .auth-logo-img {
+    width: 96px; height: 96px;
+    border-radius: 20px;
+    object-fit: contain;
+    background: #ffffff;
+    padding: 6px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+    margin: 0 auto 16px;
+    display: block;
+    animation: stampIn 0.6s ease;
+  }
+  .brand h1 { font-size: 17px; margin: 0; letter-spacing: 0.2px; font-weight: 700; }
+  .brand .sub { display: block; font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 1px; }
+
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .theme-toggle-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    display: inline-flex; align-items: center; gap: 6px;
+    user-select: none;
+  }
+  .theme-toggle-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 10px var(--accent-glow);
+  }
+
+  /* Teacher Profile Dropdown Trigger */
+  .teacher-profile-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    padding: 4px 12px 4px 5px;
+    border-radius: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+  }
+  .teacher-profile-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 10px var(--accent-glow);
+  }
+  .teacher-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 12.5px;
+    display: flex; align-items: center; justify-content: center;
+    text-transform: uppercase;
+  }
+  .teacher-name-txt {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .teacher-chevron {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* Class Header with Export PDF */
+  .class-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .btn-export-class {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-export-class:hover {
+    border-color: var(--success);
+    color: var(--success);
+    background: var(--bg-card);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px var(--success-bg);
+  }
+
+  /* Teacher Profile Modal Grid */
+  .profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .profile-stat-box {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 12px 10px;
+    text-align: center;
+  }
+  .profile-stat-box .num {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-primary);
+  }
+  .profile-stat-box .num.green { color: var(--success); }
+  .profile-stat-box .num.accent { color: var(--accent); }
+  .profile-stat-box .lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .profile-section-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+  .profile-section-item:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent);
+  }
+  .profile-section-item .left {
+    display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 500;
+  }
+  .profile-section-item .icon { font-size: 16px; }
+  .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Preset Reason Tags */
+  .btn-preset-reason {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+  }
+  .btn-preset-reason:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+  }
+
+  .shell {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* ========== SIDEBAR ========== */
+  aside.sidebar {
+    width: 270px; flex-shrink: 0;
+    padding: 24px 16px 40px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
+    position: sticky; top: 60px;
+  }
+
+  .sidebar-section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: var(--text-muted);
+    margin: 4px 10px 12px;
+    font-weight: 600;
+  }
+
+  .class-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-bottom: 4px;
+    border: 1px solid transparent;
+    transition: var(--transition);
+  }
+  .class-item:hover { background: var(--glass); border-color: var(--border); }
+  .class-item.active {
+    background: var(--bg-card);
+    border-color: var(--border-accent);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px rgba(255, 110, 108, 0.05);
+  }
+  .class-item .name { font-size: 14px; font-weight: 600; }
+  .class-item .count { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .class-item .del {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: var(--transition);
+  }
+  .class-item:hover .del { opacity: 0.6; }
+  .class-item .del:hover { opacity: 1; background: var(--accent-glow); }
+
+  .add-class-form { margin-top: 14px; padding: 0 4px; }
+  .add-class-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: var(--radius-xs);
+    font-size: 13px;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    transition: var(--transition);
+  }
+  .add-class-form input::placeholder { color: var(--text-muted); }
+  .add-class-form input:focus {
+    outline: none;
+    border-style: solid;
+    border-color: var(--accent);
+    background: var(--bg-input);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .add-class-btn {
+    width: 100%;
+    margin-top: 8px;
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+  }
+  .add-class-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 2px 12px var(--accent-glow);
+  }
+
+  /* ========== MAIN ========== */
+  main {
+    flex: 1;
+    padding: 28px 32px 60px;
+    min-width: 0;
+    overflow-y: auto;
+  }
+
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 100px 20px; color: var(--text-muted);
+    animation: slideUp 0.5s ease;
+  }
+  .empty-state .stamp-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin-bottom: 18px;
+    color: var(--text-muted);
+    animation: stampIn 0.6s ease 0.2s both;
+  }
+
+  /* Real-time clock */
+  .live-clock-strip {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(255,110,108,0.06), rgba(103,212,160,0.04));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    animation: slideUp 0.35s ease;
+  }
+  .live-clock-strip .clock-date {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .live-clock-strip .clock-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px var(--accent-glow);
+  }
+  .live-clock-strip .clock-time .sec-blink {
+    animation: pulse 1s ease infinite;
+  }
+
+  /* Summary strip */
+  .summary-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+    animation: slideInRight 0.4s ease;
+  }
+  .summary-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    transition: var(--transition);
+  }
+  .summary-card:hover {
+    border-color: var(--border-accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .summary-card .label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .summary-card .value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .summary-card .value.money { color: var(--success); }
+  .summary-card .value.accent { color: var(--accent); }
+
+  .class-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+    animation: slideUp 0.35s ease;
+  }
+  .class-header h2 {
+    font-size: 28px;
+    margin: 0;
+    background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .class-header .meta { font-size: 12.5px; color: var(--text-muted); }
+
+  .card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 22px;
+    margin-bottom: 22px;
+    transition: var(--transition);
+    animation: slideUp 0.4s ease;
+  }
+  .card:hover { border-color: rgba(255,255,255,0.08); }
+
+  .card-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--text-muted);
+    margin: 0 0 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-weight: 600;
+  }
+  .card-title .badge {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* Add student button & action bar */
+  .card-action-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .btn-add-student-popup {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-xs);
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-add-student-popup:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px var(--accent-glow);
+  }
+
+  .student-meta-tags {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;
+  }
+  .student-tag {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .student-tag.phone {
+    color: var(--success);
+    border-color: rgba(103, 212, 160, 0.2);
+    background: rgba(103, 212, 160, 0.05);
+  }
+  .student-tag.school {
+    color: var(--text-secondary);
+  }
+
+  .modal-box-large {
+    width: 460px;
+    max-width: 92vw;
+  }
+  .form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Date toolbar */
+  .session-toolbar {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .session-toolbar label { font-size: 12.5px; color: var(--text-muted); }
+  .session-toolbar input[type="date"] {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition);
+  }
+  .session-toolbar input[type="date"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .session-toolbar input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+
+  /* Attendance Table */
+  .att-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .att-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .att-table thead th {
+    background: rgba(255,255,255,0.03);
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .att-table thead th.center { text-align: center; }
+  .att-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: var(--transition);
+    animation: slideInRight 0.3s ease both;
+  }
+  .att-table tbody tr:last-child { border-bottom: none; }
+  .att-table tbody tr:hover { background: var(--glass); }
+  .att-table tbody tr.is-present { background: rgba(103, 212, 160, 0.04); }
+  .att-table tbody tr.is-present:hover { background: rgba(103, 212, 160, 0.07); }
+  .att-table td {
+    padding: 11px 14px;
+    vertical-align: middle;
+  }
+  .att-table td.center { text-align: center; }
+  .att-table .stt {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    width: 40px;
+  }
+  .att-table .student-name {
+    font-weight: 500;
+    font-size: 14px;
+  }
+  .att-table .student-price {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Custom radio checkbox */
+  .att-radio {
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    position: relative;
+  }
+  .att-radio input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .att-radio .radio-mark {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: transparent;
+  }
+  .att-radio .radio-mark .dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Absent style */
+  .att-radio.absent input:checked ~ .radio-mark {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .att-radio.absent input:checked ~ .radio-mark .dot {
+    background: var(--accent);
+    transform: scale(1);
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+
+  /* Attendance style */
+  .att-radio.present input:checked ~ .radio-mark {
+    border-color: var(--success);
+    box-shadow: 0 0 8px var(--success-glow);
+  }
+  .att-radio.present input:checked ~ .radio-mark .dot {
+    background: var(--success);
+    transform: scale(1);
+    box-shadow: 0 0 6px var(--success-glow);
+  }
+
+  .att-radio:hover .radio-mark { transform: scale(1.1); }
+
+  .att-table .action-cell {
+    width: 40px;
+    text-align: center;
+  }
+  .att-table .redit {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 14px; padding: 4px 8px;
+    border-radius: 6px;
+    transition: var(--transition);
+  }
+  .att-table .redit:hover { color: var(--accent); background: var(--accent-glow); }
+  .roster-empty { padding: 30px 14px; color: var(--text-muted); font-size: 13.5px; text-align: center; }
+
+  /* Total strip */
+  .total-strip {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    margin-top: 18px; padding-top: 16px;
+    border-top: 2px dashed rgba(255,255,255,0.06);
+    flex-wrap: wrap;
+  }
+  .total-strip .count { font-size: 13px; color: var(--text-muted); }
+  .total-strip .amount {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 26px; font-weight: 600;
+    color: var(--success);
+    background: var(--success-bg);
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(103, 212, 160, 0.15);
+    transition: var(--transition);
+  }
+
+  /* History */
+  .hist-item {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 4px;
+    transition: var(--transition);
+  }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-item:hover { background: var(--glass); }
+  .hist-row {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; gap: 12px;
+  }
+  .hist-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13.5px; font-weight: 600;
+  }
+  .hist-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .hist-amount {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px; color: var(--success); font-weight: 600;
+  }
+  .hist-del {
+    background: none; border: none;
+    color: var(--text-muted);
+    cursor: pointer; font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: var(--transition);
+  }
+  .hist-del:hover { color: var(--accent); background: var(--accent-glow); }
+  .hist-detail {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: var(--bg-input);
+    border-radius: var(--radius-xs);
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    display: none;
+    line-height: 1.8;
+    border: 1px solid var(--border);
+    animation: slideUp 0.25s ease;
+  }
+  .hist-detail.open { display: block; }
+  .hist-empty { color: var(--text-muted); font-size: 13px; padding: 8px 4px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-box {
+    position: relative;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 28px;
+    width: 380px;
+    max-width: 90vw;
+    animation: slideUp 0.3s ease;
+  }
+  .modal-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-muted);
+    font-size: 18px;
+    font-weight: 400;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    line-height: 1;
+    z-index: 10;
+    font-family: Arial, sans-serif;
+  }
+  .modal-close-btn:hover {
+    background: var(--bg-card-hover);
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: rotate(90deg);
+  }
+  .modal-box h3 {
+    font-size: 17px; margin: 0 0 6px;
+    font-family: 'Fraunces', serif;
+  }
+  .modal-box p { font-size: 13px; color: var(--text-secondary); margin: 0 0 18px; line-height: 1.5; }
+  .modal-box label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 500; }
+  .modal-box input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    font-size: 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+  }
+  .modal-box input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .modal-box input.mono { font-family: 'IBM Plex Mono', monospace; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .modal-actions button { flex: 1; padding: 11px; border-radius: var(--radius-xs); font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: var(--transition); }
+  .modal-actions .cancel { background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border); }
+  .modal-actions .cancel:hover { border-color: var(--text-muted); color: var(--text-primary); }
+  .modal-actions .confirm { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #fff; border: none; }
+  .modal-actions .confirm:hover { transform: translateY(-1px); box-shadow: 0 4px 15px var(--accent-glow); }
+  .modal-actions .danger { background: var(--accent); color: #fff; border: none; }
+  .modal-actions .danger:hover { background: var(--accent-dark); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 20px;
+    font-size: 13.5px;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-lg);
+    z-index: 300;
+    animation: slideUp 0.3s ease;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .toast.success { border-color: rgba(103, 212, 160, 0.3); }
+  .toast.success::before { content: '✓'; color: var(--success); font-weight: 700; }
+  .toast.error { border-color: var(--border-accent); }
+  .toast.error::before { content: '✕'; color: var(--accent); font-weight: 700; }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 768px) {
+    .shell { flex-direction: column; }
+    aside.sidebar {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      max-height: none;
+      position: static;
+    }
+    main { padding: 20px 16px 50px; }
+    .summary-strip { grid-template-columns: repeat(2, 1fr); }
+    .student-add-row { flex-direction: column; }
+    .student-add-row input[name="sprice"] { width: 100%; }
+    .class-header h2 { font-size: 22px; }
+    .total-strip .amount { font-size: 20px; }
+    header.topbar { flex-direction: column; gap: 10px; align-items: flex-start; }
+    .topbar-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; }
+  }
+
+  @media (max-width: 480px) {
+    .summary-strip { grid-template-columns: 1fr; }
+    .auth-card { width: 92vw; padding: 28px 20px; }
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ========== AUTH / LOGIN MODAL SCREEN ========== -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+      <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Chuyển chế độ Sáng (Kem) / Tối">
+        <span class="theme-icon">☀️</span> <span class="theme-label">Sáng</span>
+      </button>
+    </div>
+    <img src="logo.png" class="auth-logo-img" alt="Rocket Learners Logo" onerror="this.src='/logo.png'">
+    <h1 class="display" style="font-size:24px;margin-bottom:2px;">Rocket Learners</h1>
+    <p class="sub-desc" style="color:var(--accent);font-weight:600;margin-bottom:18px;">English for a Brighter Future · Sổ Điểm Danh</p>
+    
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">Đăng Nhập</div>
+      <div class="auth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">Đăng Ký</div>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+      <div class="auth-form-group">
+        <label for="loginEmail">Email giáo viên</label>
+        <input type="email" id="loginEmail" placeholder="teacher@example.com" required autocomplete="email">
+      </div>
+      <div class="auth-form-group">
+        <label for="loginPassword">Mật khẩu</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <div class="auth-error" id="authError"></div>
+      <button type="submit" class="btn-primary" id="loginBtnSubmit">Đăng nhập vào sổ</button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="registerForm" style="display:none;">
+      <div class="auth-form-group">
+        <label for="regFullName">Họ và tên giáo viên</label>
+        <input type="text" id="regFullName" placeholder="Cô Nguyễn Thị Mai" required autocomplete="name">
+      </div>
+      <div class="auth-form-group">
+        <label for="regEmail">Email giáo viên</label>
+        <input type="email" id="regEmail" placeholder="teacher@example.com" required autocomplete="email">
+      </div>
+      <div class="auth-form-group">
+        <label for="regPassword">Mật khẩu</label>
+        <input type="password" id="regPassword" placeholder="Ít nhất 4 ký tự" required autocomplete="new-password">
+      </div>
+      <div class="auth-error" id="regError"></div>
+      <button type="submit" class="btn-primary" id="regBtnSubmit">Tạo tài khoản giáo viên</button>
+    </form>
+  </div>
+</div>
+
+<!-- ========== MAIN APP INTERFACE ========== -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand" onclick="openTeacherProfileModal()" title="Rocket Learners — Bấm xem hồ sơ giáo viên">
+      <img src="logo.png" class="brand-logo-img" alt="Rocket Learners Logo" onerror="this.src='/logo.png'">
+      <div>
+        <h1 class="display">Rocket Learners</h1>
+        <span class="sub">English for a Brighter Future</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Chuyển chế độ Sáng (Kem) / Tối">
+        <span class="theme-icon">☀️</span> <span class="theme-label">Sáng</span>
+      </button>
+
+      <div class="teacher-profile-btn" id="teacherProfileTrigger" onclick="openTeacherProfileModal()" title="Xem hồ sơ & cá nhân hoá giáo viên">
+        <div class="teacher-avatar" id="teacherAvatarBadge">GV</div>
+        <span class="teacher-name-txt" id="teacherNameDisplay">Giáo viên</span>
+        <span class="teacher-chevron">▼</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sidebar-section-title">Lớp học</div>
+      <div id="classList"></div>
+      <form class="add-class-form" id="addClassForm">
+        <input type="text" name="cname" placeholder="Tên lớp học mới…" autocomplete="off" required>
+        <button type="submit" class="add-class-btn">+ Tạo lớp học</button>
+      </form>
+    </aside>
+
+    <main id="mainArea"></main>
+  </div>
+</div>
+
+<!-- ========== MODAL CONTAINER ========== -->
+<div id="modalContainer"></div>
+
+<script>
+/* ================================================================
+   SỔ ĐIỂM DANH — Frontend API Client (FastAPI + PostgreSQL Integration)
+   ================================================================ */
+
+// API Base URL — use relative /api when served by FastAPI (port 8000 or any HTTP), fallback to absolute for local file usage
+const API_BASE_URL = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
+  ? '/api'
+  : 'http://127.0.0.1:8000/api';
+
+const TOKEN_KEY = 'attendance_teacher_token';
+const USER_KEY = 'attendance_teacher_user';
+const THEME_KEY = 'attendance_theme';
+
+/* ---------------- Theme Management (Light / Dark) ---------------- */
+function getPreferredTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) return saved;
+  // If user prefers light or default to light/dark
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem(THEME_KEY, theme);
+
+  const isLight = theme === 'light';
+  const icon = isLight ? '🌙' : '☀️';
+  const label = isLight ? 'Tối' : 'Sáng';
+
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    const iconEl = btn.querySelector('.theme-icon');
+    const labelEl = btn.querySelector('.theme-label');
+    if (iconEl) iconEl.textContent = icon;
+    if (labelEl) labelEl.textContent = label;
+  });
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  showToast(`Đã chuyển sang giao diện ${next === 'light' ? 'Sáng (Màu Kem êm dịu)' : 'Tối (Dark Mode)'}`);
+}
+
+// Immediately apply saved theme on load
+applyTheme(getPreferredTheme());
+
+/* ---------------- State & Token Initialization ---------------- */
+let currentToken = localStorage.getItem(TOKEN_KEY) || null;
+let currentUser = null;
+try {
+  currentUser = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+} catch (e) {
+  currentUser = null;
+}
+
+let state = {
+  classes: [],
+  currentClass: null,
+  students: [],
+  sessions: [],
+  dailyAttendance: {}
+};
+
+let selectedClassId = localStorage.getItem('attendance_selected_class_id') || null;
+let currentDate = todayStr();
+let checkedIds = new Set();
+let clockInterval = null;
+
+/* ---------------- API Helper ---------------- */
+async function apiRequest(endpoint, options = {}) {
+  const token = currentToken || localStorage.getItem(TOKEN_KEY);
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers
+    });
+
+    if (response.status === 401 && endpoint !== '/auth/login' && endpoint !== '/auth/register') {
+      console.warn(`401 Unauthorized from ${endpoint}`);
+      logout(false);
+      showToast('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+      throw new Error('Unauthorized');
+    }
+
+    if (response.status === 204) {
+      return null;
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || 'Có lỗi xảy ra khi gọi máy chủ.');
+    }
+    return data;
+  } catch (error) {
+    console.error(`API Error [${endpoint}]:`, error);
+    throw error;
+  }
+}
+
+/* ---------------- Utilities ---------------- */
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function fmtVND(n) {
+  return (Number(n) || 0).toLocaleString('vi-VN') + '₫';
+}
+
+function fmtDateVN(iso) {
+  if (!iso) return '';
+  const parts = iso.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return iso;
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function showToast(message, type = 'success', duration = 3500) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    toast.style.transition = '0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+function showModal(html) {
+  const container = document.getElementById('modalContainer');
+  container.innerHTML = `<div class="modal-overlay">${html}</div>`;
+  const overlay = container.querySelector('.modal-overlay');
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal();
+  });
+}
+
+function closeModal() {
+  const container = document.getElementById('modalContainer');
+  container.innerHTML = '';
+}
+
+/* ---------------- Real-time Clock ---------------- */
+function startClock() {
+  if (clockInterval) clearInterval(clockInterval);
+  updateClock();
+  clockInterval = setInterval(updateClock, 1000);
+}
+
+function updateClock() {
+  const el = document.getElementById('liveClock');
+  const dateEl = document.getElementById('liveDate');
+  if (!el || !dateEl) return;
+
+  const now = new Date();
+  const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+  const dayName = days[now.getDay()];
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mi = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+
+  dateEl.textContent = `${dayName}, ${dd}/${mm}/${yyyy}`;
+  el.innerHTML = `${hh}<span class="sec-blink">:</span>${mi}<span class="sec-blink">:</span>${ss}`;
+}
+
+/* ---------------- Authentication Logic ---------------- */
+function switchAuthTab(tab) {
+  const tabLoginBtn = document.getElementById('tabLoginBtn');
+  const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const authError = document.getElementById('authError');
+  const regError = document.getElementById('regError');
+
+  authError.textContent = '';
+  regError.textContent = '';
+
+  if (tab === 'login') {
+    tabLoginBtn.classList.add('active');
+    tabRegisterBtn.classList.remove('active');
+    loginForm.style.display = 'block';
+    registerForm.style.display = 'none';
+  } else {
+    tabRegisterBtn.classList.add('active');
+    tabLoginBtn.classList.remove('active');
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errorEl = document.getElementById('authError');
+  const btn = document.getElementById('loginBtnSubmit');
+
+  errorEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Đang đăng nhập...';
+
+  try {
+    const data = await apiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+
+    currentToken = data.access_token;
+    currentUser = data.user;
+    localStorage.setItem(TOKEN_KEY, currentToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+
+    showToast(`Chào mừng giáo viên ${currentUser.full_name}!`);
+    enterApp();
+  } catch (err) {
+    errorEl.textContent = err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại Email hoặc Mật khẩu.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Đăng nhập vào sổ';
+  }
+});
+
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fullName = document.getElementById('regFullName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const errorEl = document.getElementById('regError');
+  const btn = document.getElementById('regBtnSubmit');
+
+  errorEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Đang tạo tài khoản...';
+
+  try {
+    await apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ full_name: fullName, email, password })
+    });
+
+    // Auto login after register
+    const loginData = await apiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+
+    currentToken = loginData.access_token;
+    currentUser = loginData.user;
+    localStorage.setItem(TOKEN_KEY, currentToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+
+    showToast(`Đăng ký thành công! Chào mừng ${currentUser.full_name}`);
+    enterApp();
+  } catch (err) {
+    errorEl.textContent = err.message || 'Đăng ký không thành công.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Tạo tài khoản giáo viên';
+  }
+});
+
+function logout(showConfirm = true) {
+  if (showConfirm && !confirm('Bạn có chắc muốn đăng xuất khỏi tài khoản giáo viên?')) {
+    return;
+  }
+  currentToken = null;
+  currentUser = null;
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  selectedClassId = null;
+
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  if (clockInterval) {
+    clearInterval(clockInterval);
+    clockInterval = null;
+  }
+}
+
+// Safely attach logout if element exists
+const logoutBtnEl = document.getElementById('logoutBtn');
+if (logoutBtnEl) {
+  logoutBtnEl.addEventListener('click', () => logout(true));
+}
+
+function enterApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  updateTeacherHeaderDisplay();
+  loadClasses();
+}
+
+function updateTeacherHeaderDisplay() {
+  if (!currentUser) return;
+  const nameEl = document.getElementById('teacherNameDisplay');
+  const avatarEl = document.getElementById('teacherAvatarBadge');
+  if (nameEl) nameEl.textContent = currentUser.full_name || 'Giáo viên';
+  if (avatarEl) avatarEl.textContent = getInitials(currentUser.full_name || 'GV');
+}
+
+function getInitials(name) {
+  if (!name) return 'GV';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/* ---------------- Teacher Profile & Personalization Modal ---------------- */
+function openTeacherProfileModal() {
+  if (!currentUser) return;
+
+  const totalClasses = state.classes.length;
+  const totalStudents = state.classes.reduce((sum, c) => sum + (c.student_count || 0), 0);
+  const totalRevenue = state.classes.reduce((sum, c) => sum + (c.total_revenue || 0), 0);
+  const initials = getInitials(currentUser.full_name || 'GV');
+  const joinDate = currentUser.created_at ? new Date(currentUser.created_at).toLocaleDateString('vi-VN') : 'Hôm nay';
+
+  showModal(`
+    <div class="modal-box modal-box-large">
+      <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+      
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-right:28px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px var(--accent-glow);flex-shrink:0;">
+          ${escapeHtml(initials)}
+        </div>
+        <div>
+          <h3 class="display" style="margin:0;font-size:18px;">${escapeHtml(currentUser.full_name)}</h3>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">📧 ${escapeHtml(currentUser.email)}</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">📅 Ngày tạo: ${joinDate}</div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;color:var(--text-muted);margin-top:12px;">📊 Thống kê giảng dạy</div>
+      <div class="profile-stats-grid">
+        <div class="profile-stat-box">
+          <div class="num accent">${totalClasses}</div>
+          <div class="lbl">Lớp học</div>
+        </div>
+        <div class="profile-stat-box">
+          <div class="num">${totalStudents}</div>
+          <div class="lbl">Học sinh</div>
+        </div>
+        <div class="profile-stat-box">
+          <div class="num green" style="font-size:14px;">${fmtVND(totalRevenue)}</div>
+          <div class="lbl">Doanh thu</div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;color:var(--text-muted);margin:16px 0 8px;">⚙️ Cá nhân hoá</div>
+      
+      <!-- Edit Name -->
+      <div class="profile-section-item" onclick="promptUpdateTeacherName()">
+        <div class="left">
+          <span class="icon">✏️</span>
+          <span>Đổi họ tên hiển thị</span>
+        </div>
+        <span style="font-size:12px;color:var(--text-muted);">Sửa ➔</span>
+      </div>
+
+      <!-- Logout -->
+      <div class="profile-section-item" style="border-color:rgba(255,110,108,0.25);margin-bottom:0;" onclick="closeModal(); if(confirm('Bạn có chắc muốn đăng xuất?')) logout();">
+        <div class="left">
+          <span class="icon" style="color:var(--accent);">🚪</span>
+          <span style="color:var(--accent);font-weight:600;">Đăng xuất khỏi tài khoản</span>
+        </div>
+        <span style="font-size:12px;color:var(--accent);">➔</span>
+      </div>
+    </div>
+  `);
+}
+
+function promptUpdateTeacherName() {
+  closeModal();
+  showModal(`
+    <div class="modal-box">
+      <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+      <h3 class="display" style="padding-right:28px;">Đổi tên giáo viên</h3>
+      <p>Cập nhật họ và tên hiển thị trên sổ và các bản in báo cáo PDF.</p>
+      <label>Họ và tên mới</label>
+      <input type="text" id="newTeacherNameInput" value="${escapeHtml(currentUser.full_name || '')}" placeholder="Cô Nguyễn Thị Mai" required autocomplete="off">
+      <div class="modal-actions">
+        <button type="button" class="confirm" id="saveTeacherNameBtn" style="width:100%;">Lưu thay đổi</button>
+      </div>
+    </div>
+  `);
+
+  document.getElementById('saveTeacherNameBtn').addEventListener('click', () => {
+    const val = document.getElementById('newTeacherNameInput').value.trim();
+    if (!val) {
+      showToast('Vui lòng nhập họ tên hợp lệ.', 'error');
+      return;
+    }
+    currentUser.full_name = val;
+    localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+    updateTeacherHeaderDisplay();
+    closeModal();
+    showToast(`Đã cập nhật tên: "${val}"`);
+    if (selectedClassId) renderMain();
+  });
+}
+
+/* ---------------- Data Loading & Rendering ---------------- */
+const SELECTED_CLASS_KEY = 'attendance_selected_class_id';
+
+async function loadClasses(preferClassId = null) {
+  try {
+    state.classes = await apiRequest('/classes');
+    
+    // Restore or maintain selected class
+    const savedId = preferClassId || selectedClassId || localStorage.getItem(SELECTED_CLASS_KEY);
+    if (savedId && state.classes.some(c => c.id === savedId)) {
+      selectedClassId = savedId;
+    } else if (state.classes.length > 0) {
+      selectedClassId = state.classes[0].id;
+    } else {
+      selectedClassId = null;
+    }
+
+    if (selectedClassId) {
+      localStorage.setItem(SELECTED_CLASS_KEY, selectedClassId);
+    } else {
+      localStorage.removeItem(SELECTED_CLASS_KEY);
+    }
+
+    renderClassList();
+    if (selectedClassId) {
+      await loadClassData(selectedClassId);
+    } else {
+      renderMain();
+    }
+  } catch (err) {
+    showToast('Lỗi khi tải danh sách lớp học từ Backend.', 'error');
+  }
+}
+
+function renderClassList() {
+  const wrap = document.getElementById('classList');
+  wrap.innerHTML = '';
+
+  if (state.classes.length === 0) {
+    wrap.innerHTML = `<div style="font-size:12.5px;color:var(--text-muted);padding:10px;text-align:center;">Chưa có lớp học nào.</div>`;
+    return;
+  }
+
+  state.classes.forEach((c, index) => {
+    const div = document.createElement('div');
+    div.className = 'class-item' + (c.id === selectedClassId ? ' active' : '');
+    div.style.animationDelay = `${index * 0.04}s`;
+    div.innerHTML = `
+      <div>
+        <div class="name">${escapeHtml(c.name)}</div>
+        <div class="count">${c.student_count || 0} học sinh · ${c.session_count || 0} buổi</div>
+      </div>
+      <button class="del" title="Xoá lớp" data-id="${c.id}">✕</button>
+    `;
+
+    div.addEventListener('click', (e) => {
+      if (e.target.classList.contains('del')) return;
+      selectedClassId = c.id;
+      localStorage.setItem(SELECTED_CLASS_KEY, selectedClassId);
+      renderClassList();
+      loadClassData(c.id);
+    });
+
+    div.querySelector('.del').addEventListener('click', (e) => {
+      e.stopPropagation();
+      showModal(`
+        <div class="modal-box">
+          <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+          <h3 class="display" style="padding-right:28px;">Xoá lớp học</h3>
+          <p>Bạn có chắc muốn xoá lớp <strong>"${escapeHtml(c.name)}"</strong>?<br>
+          Toàn bộ danh sách học sinh và lịch sử điểm danh sẽ bị xoá vĩnh viễn trên Cơ sở dữ liệu.</p>
+          <div class="modal-actions">
+            <button class="cancel" onclick="closeModal()">Huỷ</button>
+            <button class="danger" id="confirmDeleteClass">Xoá lớp</button>
+          </div>
+        </div>
+      `);
+
+      document.getElementById('confirmDeleteClass').addEventListener('click', async () => {
+        try {
+          await apiRequest(`/classes/${c.id}`, { method: 'DELETE' });
+          closeModal();
+          showToast(`Đã xoá lớp "${c.name}"`);
+          if (selectedClassId === c.id) {
+            selectedClassId = null;
+            localStorage.removeItem(SELECTED_CLASS_KEY);
+          }
+          await loadClasses();
+        } catch (err) {
+          showToast('Xoá lớp thất bại.', 'error');
+        }
+      });
+    });
+
+    wrap.appendChild(div);
+  });
+}
+
+document.getElementById('addClassForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = e.target.cname;
+  const name = input.value.trim();
+  if (!name) return;
+
+  try {
+    const newClass = await apiRequest('/classes', {
+      method: 'POST',
+      body: JSON.stringify({ name })
+    });
+    input.value = '';
+    selectedClassId = newClass.id;
+    localStorage.setItem(SELECTED_CLASS_KEY, selectedClassId);
+    showToast(`Đã tạo lớp "${newClass.name}"`);
+    await loadClasses(newClass.id);
+  } catch (err) {
+    showToast(err.message || 'Lỗi khi tạo lớp học.', 'error');
+  }
+});
+
+/* ---------------- Load Class Students, Sessions & Daily Status ---------------- */
+async function loadClassData(classId) {
+  try {
+    const [detail, students, sessions, dailyStatus] = await Promise.all([
+      apiRequest(`/classes/${classId}`),
+      apiRequest(`/classes/${classId}/students`),
+      apiRequest(`/classes/${classId}/sessions`),
+      apiRequest(`/classes/${classId}/daily/${currentDate}`)
+    ]);
+
+    state.currentClass = detail;
+    state.students = students;
+    state.sessions = sessions;
+
+    // Restore checked IDs from backend daily status
+    checkedIds = new Set(dailyStatus.present_student_ids || []);
+
+    renderMain();
+  } catch (err) {
+    console.error('Error loading class data:', err);
+    showToast('Lỗi khi tải dữ liệu chi tiết lớp học.', 'error');
+  }
+}
+
+/* ---------------- Main View Render ---------------- */
+function renderMain() {
+  const main = document.getElementById('mainArea');
+
+  if (!selectedClassId || !state.currentClass) {
+    if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
+    main.innerHTML = `
+      <div class="empty-state">
+        <div class="stamp-icon">✎</div>
+        <div class="display" style="font-size:20px;margin-bottom:8px;">Chưa chọn lớp học</div>
+        <div style="font-size:13.5px;line-height:1.6;">Thêm hoặc chọn một lớp ở thanh bên trái để bắt đầu điểm danh.</div>
+      </div>`;
+    return;
+  }
+
+  const cls = state.currentClass;
+  const students = state.students;
+  const sessions = state.sessions;
+
+  main.innerHTML = `
+    <!-- Class Header with PDF Export Button -->
+    <div class="class-header">
+      <div>
+        <h2 class="display">📚 ${escapeHtml(cls.name)}</h2>
+        <div class="meta">${cls.student_count} học sinh · ${cls.session_count} buổi đã điểm danh</div>
+      </div>
+      <div class="class-header-actions">
+        <button type="button" class="btn-export-class" id="exportClassBtn" title="In & Xuất báo cáo PDF cho lớp ${escapeHtml(cls.name)}">
+          📄 Xuất PDF lớp này
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Clock -->
+    <div class="live-clock-strip">
+      <div class="clock-date" id="liveDate">—</div>
+      <div class="clock-time" id="liveClock">--:--:--</div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-strip">
+      <div class="summary-card">
+        <div class="label">Tổng học sinh</div>
+        <div class="value accent">${cls.student_count}</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Số buổi đã dạy</div>
+        <div class="value">${cls.session_count}</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">TB có mặt / buổi</div>
+        <div class="value">${cls.average_attendance}</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Tổng doanh thu</div>
+        <div class="value money">${fmtVND(cls.total_revenue)}</div>
+      </div>
+    </div>
+
+    <!-- Attendance Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>📋 Điểm danh</span>
+        <span class="badge">${students.length} học sinh</span>
+      </div>
+      
+      <div class="card-action-bar">
+        <div class="session-toolbar" style="margin-bottom:0;">
+          <label for="sessionDate">Ngày điểm danh:</label>
+          <input type="date" id="sessionDate" value="${currentDate}">
+        </div>
+        <button type="button" class="btn-add-student-popup" id="openAddStudentModalBtn">
+          <span>+</span> Thêm học sinh
+        </button>
+      </div>
+
+      <div id="roster"></div>
+      <div class="total-strip">
+        <div class="count" id="presentCount">0 / ${students.length} học sinh có mặt</div>
+        <div class="amount" id="totalAmount">${fmtVND(0)}</div>
+      </div>
+      <button class="btn-success" id="saveSessionBtn" style="margin-top:16px;" ${students.length === 0 ? 'disabled' : ''}>
+        💾 Lưu buổi điểm danh
+      </button>
+      <div class="save-msg" id="saveMsg"></div>
+    </div>
+
+    <!-- History Card -->
+    <div class="card" style="animation-delay:0.1s;">
+      <div class="card-title">
+        <span>📅 Lịch sử điểm danh</span>
+        <span class="badge">${sessions.length} buổi</span>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  `;
+
+  startClock();
+
+  // Export PDF Button event in class header
+  document.getElementById('exportClassBtn').addEventListener('click', () => {
+    exportCurrentClassPDF();
+  });
+
+  // Date change event
+  document.getElementById('sessionDate').addEventListener('change', async (e) => {
+    currentDate = e.target.value;
+    try {
+      const daily = await apiRequest(`/classes/${selectedClassId}/daily/${currentDate}`);
+      checkedIds = new Set(daily.present_student_ids || []);
+      renderRoster(students);
+      updateTotals(students);
+    } catch (err) {
+      checkedIds = new Set();
+      renderRoster(students);
+      updateTotals(students);
+    }
+  });
+
+  // Open Add Student Popup Modal
+  document.getElementById('openAddStudentModalBtn').addEventListener('click', () => {
+    showModal(`
+      <div class="modal-box modal-box-large">
+        <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+        <h3 class="display" style="padding-right:28px;">Thêm học sinh mới</h3>
+        <p>Nhập thông tin chi tiết học sinh vào lớp <strong>${escapeHtml(cls.name)}</strong></p>
+        
+        <form id="popupAddStudentForm">
+          <div style="margin-bottom:12px;">
+            <label>Họ và tên học sinh <span style="color:var(--accent);">*</span></label>
+            <input type="text" id="popStudentName" placeholder="Ví dụ: Nguyễn Văn An" required autocomplete="off">
+          </div>
+
+          <div class="form-row-2col">
+            <div>
+              <label>Lớp (ở trường)</label>
+              <input type="text" id="popSchoolClass" placeholder="Ví dụ: 10A1" autocomplete="off">
+            </div>
+            <div>
+              <label>Trường học</label>
+              <input type="text" id="popSchoolName" placeholder="Ví dụ: THPT Chu Văn An" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="form-row-2col">
+            <div>
+              <label>SĐT Bố/Mẹ</label>
+              <input type="tel" id="popParentPhone" class="mono" placeholder="0912 345 678" autocomplete="off">
+            </div>
+            <div>
+              <label>Học phí / buổi (VNĐ) <span style="color:var(--accent);">*</span></label>
+              <input type="text" id="popStudentPrice" class="mono" placeholder="200000" required autocomplete="off">
+            </div>
+          </div>
+
+          <div class="modal-actions" style="margin-top:10px;">
+            <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
+            <button type="submit" class="confirm" id="popSubmitBtn">Lưu học sinh</button>
+          </div>
+        </form>
+      </div>
+    `);
+
+    document.getElementById('popupAddStudentForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const name = document.getElementById('popStudentName').value.trim();
+      const schoolClass = document.getElementById('popSchoolClass').value.trim();
+      const schoolName = document.getElementById('popSchoolName').value.trim();
+      const parentPhone = document.getElementById('popParentPhone').value.trim();
+      const priceRaw = document.getElementById('popStudentPrice').value.replace(/[^\d]/g, '');
+      const price = Number(priceRaw);
+
+      if (!name) {
+        showToast('Vui lòng nhập họ tên học sinh.', 'error');
+        return;
+      }
+      if (!priceRaw || isNaN(price)) {
+        showToast('Vui lòng nhập mức học phí hợp lệ.', 'error');
+        return;
+      }
+
+      const submitBtn = document.getElementById('popSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang lưu...';
+
+      try {
+        await apiRequest(`/classes/${selectedClassId}/students`, {
+          method: 'POST',
+          body: JSON.stringify({
+            name,
+            school_class: schoolClass || null,
+            school_name: schoolName || null,
+            parent_phone: parentPhone || null,
+            price_per_session: price
+          })
+        });
+
+        closeModal();
+        showToast(`Đã thêm học sinh "${name}" vào lớp`);
+        // Instant reactive refresh from database
+        await loadClassData(selectedClassId);
+        await loadClasses(selectedClassId);
+      } catch (err) {
+        showToast(err.message || 'Lỗi khi thêm học sinh.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Lưu học sinh';
+      }
+    });
+  });
+
+  renderRoster(students);
+
+  // Save session button
+  document.getElementById('saveSessionBtn').addEventListener('click', async () => {
+    if (students.length === 0) return;
+    const presentList = students.filter(s => checkedIds.has(s.id));
+    
+    // If all students are absent, prompt for absence reason
+    if (presentList.length === 0) {
+      showModal(`
+        <div class="modal-box">
+          <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+          <h3 class="display" style="padding-right:28px;">⚠️ Toàn bộ lớp đều vắng (Absent)</h3>
+          <p>Tất cả học sinh trong lớp hôm nay đều vắng. Vui lòng nhập <strong>lý do nghỉ học</strong> để lưu vào lịch sử:</p>
+          
+          <label>Lý do nghỉ của buổi học <span style="color:var(--accent);">*</span></label>
+          <input type="text" id="absenceReasonInput" placeholder="Ví dụ: Nghỉ lễ 2/9, Giáo viên bận, Cả lớp xin dời lịch..." required autocomplete="off" style="margin-bottom:10px;">
+
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+            <button type="button" class="btn-preset-reason" onclick="document.getElementById('absenceReasonInput').value='Nghỉ lễ / Tết'">🎉 Nghỉ lễ / Tết</button>
+            <button type="button" class="btn-preset-reason" onclick="document.getElementById('absenceReasonInput').value='Giáo viên bận đột xuất'">👨‍🏫 Giáo viên bận</button>
+            <button type="button" class="btn-preset-reason" onclick="document.getElementById('absenceReasonInput').value='Cả lớp xin nghỉ dời lịch'">📅 Cả lớp dời lịch</button>
+            <button type="button" class="btn-preset-reason" onclick="document.getElementById('absenceReasonInput').value='Nghỉ thời tiết xấu / mưa bão'">🌧️ Thời tiết xấu</button>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
+            <button type="button" class="confirm" id="confirmSaveAbsenceBtn">Xác nhận lưu buổi nghỉ</button>
+          </div>
+        </div>
+      `);
+
+      document.getElementById('confirmSaveAbsenceBtn').addEventListener('click', async () => {
+        const reason = document.getElementById('absenceReasonInput').value.trim();
+        if (!reason) {
+          showToast('Vui lòng nhập lý do nghỉ học.', 'error');
+          return;
+        }
+
+        const confirmBtn = document.getElementById('confirmSaveAbsenceBtn');
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Đang lưu...';
+
+        try {
+          const savedSession = await apiRequest(`/classes/${selectedClassId}/sessions`, {
+            method: 'POST',
+            body: JSON.stringify({
+              session_date: currentDate,
+              present_student_ids: [],
+              absence_reason: reason
+            })
+          });
+
+          closeModal();
+          showToast(`Đã lưu buổi nghỉ: ${fmtDateVN(currentDate)} · Lý do: "${reason}"`);
+          await loadClassData(selectedClassId);
+          await loadClasses(selectedClassId);
+        } catch (err) {
+          showToast(err.message || 'Lỗi khi lưu buổi điểm danh.', 'error');
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Xác nhận lưu buổi nghỉ';
+        }
+      });
+      return;
+    }
+
+    // Normal save when at least 1 student is present
+    const saveBtn = document.getElementById('saveSessionBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Đang lưu vào cơ sở dữ liệu...';
+
+    try {
+      const savedSession = await apiRequest(`/classes/${selectedClassId}/sessions`, {
+        method: 'POST',
+        body: JSON.stringify({
+          session_date: currentDate,
+          present_student_ids: [...checkedIds],
+          absence_reason: null
+        })
+      });
+
+      showToast(`Đã lưu: ${fmtDateVN(currentDate)} · ${presentList.length} HS · ${fmtVND(savedSession.total_amount)}`);
+      await loadClassData(selectedClassId);
+      await loadClasses(selectedClassId);
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi lưu buổi điểm danh.', 'error');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Lưu buổi điểm danh';
+      }
+    }
+  });
+
+  renderHistory();
+}
+
+/* ---------------- Roster Table Rendering ---------------- */
+function renderRoster(students) {
+  const roster = document.getElementById('roster');
+  if (!roster) return;
+
+  if (students.length === 0) {
+    roster.innerHTML = `<div class="roster-empty">Chưa có học sinh nào trong lớp.<br>Bấm <strong>"+ Thêm học sinh"</strong> ở trên để thêm học sinh.</div>`;
+    return;
+  }
+
+  let tableHTML = `
+    <div class="att-table-wrap">
+      <table class="att-table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Họ và tên & Thông tin</th>
+            <th>Học phí / buổi</th>
+            <th class="center">Absent</th>
+            <th class="center">Attendance</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rosterBody">
+        </tbody>
+      </table>
+    </div>
+  `;
+  roster.innerHTML = tableHTML;
+
+  const tbody = document.getElementById('rosterBody');
+
+  students.forEach((s, index) => {
+    const tr = document.createElement('tr');
+    tr.dataset.sid = s.id;
+    tr.style.animationDelay = `${index * 0.04}s`;
+    const radioName = `att_${s.id}`;
+    const isPresent = checkedIds.has(s.id);
+
+    // Build tags for School Class, School Name, Parent Phone
+    let metaTagsHTML = '';
+    if (s.school_class || s.school_name || s.parent_phone) {
+      metaTagsHTML = '<div class="student-meta-tags">';
+      if (s.school_class) {
+        metaTagsHTML += `<span class="student-tag">📚 Lớp ${escapeHtml(s.school_class)}</span>`;
+      }
+      if (s.school_name) {
+        metaTagsHTML += `<span class="student-tag school">🏫 ${escapeHtml(s.school_name)}</span>`;
+      }
+      if (s.parent_phone) {
+        metaTagsHTML += `<span class="student-tag phone" title="Gọi phụ huynh"><a href="tel:${escapeHtml(s.parent_phone)}" style="color:inherit;text-decoration:none;">📞 PH: ${escapeHtml(s.parent_phone)}</a></span>`;
+      }
+      metaTagsHTML += '</div>';
+    }
+
+    tr.innerHTML = `
+      <td class="stt">${index + 1}</td>
+      <td class="student-name">
+        <div>${escapeHtml(s.name)}</div>
+        ${metaTagsHTML}
+      </td>
+      <td class="student-price">${fmtVND(s.price_per_session)}</td>
+      <td class="center">
+        <label class="att-radio absent">
+          <input type="radio" name="${radioName}" value="absent" ${!isPresent ? 'checked' : ''}>
+          <span class="radio-mark"><span class="dot"></span></span>
+        </label>
+      </td>
+      <td class="center">
+        <label class="att-radio present">
+          <input type="radio" name="${radioName}" value="present" ${isPresent ? 'checked' : ''}>
+          <span class="radio-mark"><span class="dot"></span></span>
+        </label>
+      </td>
+      <td class="action-cell">
+        <button class="redit" data-id="${s.id}" title="Sửa / xoá học sinh">⋯</button>
+      </td>
+    `;
+
+    if (isPresent) tr.classList.add('is-present');
+
+    const radios = tr.querySelectorAll(`input[name="${radioName}"]`);
+    radios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (radio.value === 'present') {
+          checkedIds.add(s.id);
+          tr.classList.add('is-present');
+        } else {
+          checkedIds.delete(s.id);
+          tr.classList.remove('is-present');
+        }
+        updateTotals(students);
+      });
+    });
+
+    // Edit / Delete Student Modal
+    tr.querySelector('.redit').addEventListener('click', () => {
+      showModal(`
+        <div class="modal-box modal-box-large">
+          <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+          <h3 class="display" style="padding-right:28px;">Chỉnh sửa thông tin học sinh</h3>
+          <p>Cập nhật hoặc xoá học sinh khỏi lớp.</p>
+
+          <form id="editStudentPopupForm">
+            <div style="margin-bottom:12px;">
+              <label>Họ và tên học sinh <span style="color:var(--accent);">*</span></label>
+              <input type="text" id="editStudentName" value="${escapeHtml(s.name)}" required autocomplete="off">
+            </div>
+
+            <div class="form-row-2col">
+              <div>
+                <label>Lớp (ở trường)</label>
+                <input type="text" id="editSchoolClass" value="${escapeHtml(s.school_class || '')}" placeholder="Ví dụ: 10A1" autocomplete="off">
+              </div>
+              <div>
+                <label>Trường học</label>
+                <input type="text" id="editSchoolName" value="${escapeHtml(s.school_name || '')}" placeholder="Ví dụ: THPT Chu Văn An" autocomplete="off">
+              </div>
+            </div>
+
+            <div class="form-row-2col">
+              <div>
+                <label>SĐT Bố/Mẹ</label>
+                <input type="tel" id="editParentPhone" class="mono" value="${escapeHtml(s.parent_phone || '')}" placeholder="0912 345 678" autocomplete="off">
+              </div>
+              <div>
+                <label>Học phí / buổi (VNĐ) <span style="color:var(--accent);">*</span></label>
+                <input type="text" id="editStudentPrice" class="mono" value="${s.price_per_session}" required autocomplete="off">
+              </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top:10px;">
+              <button type="button" class="danger" id="deleteStudentBtn">🗑 Xoá</button>
+              <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
+              <button type="submit" class="confirm" id="saveStudentBtn">Lưu cập nhật</button>
+            </div>
+          </form>
+        </div>
+      `);
+
+      document.getElementById('editStudentPopupForm').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const newName = document.getElementById('editStudentName').value.trim();
+        const newSchoolClass = document.getElementById('editSchoolClass').value.trim();
+        const newSchoolName = document.getElementById('editSchoolName').value.trim();
+        const newParentPhone = document.getElementById('editParentPhone').value.trim();
+        const newPriceRaw = document.getElementById('editStudentPrice').value.replace(/[^\d]/g, '');
+        const newPrice = Number(newPriceRaw);
+
+        if (!newName || isNaN(newPrice)) {
+          showToast('Thông tin không hợp lệ.', 'error');
+          return;
+        }
+
+        try {
+          await apiRequest(`/classes/${selectedClassId}/students/${s.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+              name: newName,
+              school_class: newSchoolClass || null,
+              school_name: newSchoolName || null,
+              parent_phone: newParentPhone || null,
+              price_per_session: newPrice
+            })
+          });
+          closeModal();
+          showToast(`Đã cập nhật thông tin "${newName}"`);
+          // Instant reactive refresh from database
+          await loadClassData(selectedClassId);
+          await loadClasses(selectedClassId);
+        } catch (err) {
+          showToast('Cập nhật học sinh thất bại.', 'error');
+        }
+      });
+
+      document.getElementById('deleteStudentBtn').addEventListener('click', () => {
+        closeModal();
+        showModal(`
+          <div class="modal-box">
+            <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+            <h3 class="display" style="padding-right:28px;">Xác nhận xoá</h3>
+            <p>Bạn có chắc muốn xoá học sinh <strong>"${escapeHtml(s.name)}"</strong> khỏi lớp?</p>
+            <div class="modal-actions">
+              <button class="cancel" onclick="closeModal()">Huỷ</button>
+              <button class="danger" id="confirmDeleteStudent">Xoá</button>
+            </div>
+          </div>
+        `);
+
+        document.getElementById('confirmDeleteStudent').addEventListener('click', async () => {
+          try {
+            await apiRequest(`/classes/${selectedClassId}/students/${s.id}`, { method: 'DELETE' });
+            closeModal();
+            showToast(`Đã xoá học sinh "${s.name}"`);
+            // Instant reactive refresh from database
+            await loadClassData(selectedClassId);
+            await loadClasses(selectedClassId);
+          } catch (err) {
+            showToast('Xoá học sinh thất bại.', 'error');
+          }
+        });
+      });
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  updateTotals(students);
+}
+
+function updateTotals(students) {
+  const present = students.filter(s => checkedIds.has(s.id));
+  const total = present.reduce((sum, s) => sum + Number(s.price_per_session || 0), 0);
+  const countEl = document.getElementById('presentCount');
+  const amountEl = document.getElementById('totalAmount');
+  if (countEl) countEl.textContent = `${present.length} / ${students.length} học sinh có mặt`;
+  if (amountEl) amountEl.textContent = fmtVND(total);
+}
+
+/* ---------------- History List Rendering ---------------- */
+function renderHistory() {
+  const wrap = document.getElementById('historyList');
+  if (!wrap) return;
+
+  const sessions = state.sessions || [];
+  if (sessions.length === 0) {
+    wrap.innerHTML = `<div class="hist-empty">Chưa có buổi điểm danh nào được lưu.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = '';
+
+  sessions.forEach((s, index) => {
+    const item = document.createElement('div');
+    item.className = 'hist-item';
+    item.style.animationDelay = `${index * 0.03}s`;
+
+    const presentRecords = (s.records || []).filter(r => r.is_present);
+    const isAllAbsent = presentRecords.length === 0;
+
+    const subText = isAllAbsent
+      ? `<span style="color:var(--accent);font-weight:600;">🚫 Nghỉ cả lớp: ${escapeHtml(s.absence_reason || 'Vắng toàn bộ')}</span>`
+      : `${presentRecords.length} học sinh có mặt`;
+
+    const detailHTML = isAllAbsent
+      ? `<div style="color:var(--accent);font-size:12px;padding:4px 0;">📌 <strong>Lý do nghỉ:</strong> ${escapeHtml(s.absence_reason || 'Không có ghi chú')}</div>`
+      : presentRecords.map(p => `<span style="display:inline-block;margin-right:4px;">•</span> ${escapeHtml(p.student_name_snapshot)} — <span class="mono" style="color:var(--success);">${fmtVND(p.price_snapshot)}</span>`).join('<br>');
+
+    item.innerHTML = `
+      <div class="hist-row">
+        <div>
+          <div class="hist-date">${fmtDateVN(s.session_date)}</div>
+          <div class="hist-sub">${subText}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="hist-amount" style="${isAllAbsent ? 'color:var(--text-muted);font-weight:500;' : ''}">${fmtVND(s.total_amount)}</div>
+          <button class="hist-del" title="Xoá buổi này">✕</button>
+        </div>
+      </div>
+      <div class="hist-detail">${detailHTML}</div>
+    `;
+
+    item.querySelector('.hist-row').addEventListener('click', (e) => {
+      if (e.target.classList.contains('hist-del')) return;
+      item.querySelector('.hist-detail').classList.toggle('open');
+    });
+
+    item.querySelector('.hist-del').addEventListener('click', (e) => {
+      e.stopPropagation();
+      showModal(`
+        <div class="modal-box">
+          <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+          <h3 class="display" style="padding-right:28px;">Xoá buổi điểm danh</h3>
+          <p>Bạn có chắc muốn xoá buổi điểm danh ngày <strong>${fmtDateVN(s.session_date)}</strong>?<br>
+          (${isAllAbsent ? `🚫 Nghỉ cả lớp (${escapeHtml(s.absence_reason || '')})` : `${presentRecords.length} HS · ${fmtVND(s.total_amount)}`})</p>
+          <div class="modal-actions">
+            <button class="cancel" onclick="closeModal()">Huỷ</button>
+            <button class="danger" id="confirmDeleteSession">Xoá</button>
+          </div>
+        </div>
+      `);
+
+      document.getElementById('confirmDeleteSession').addEventListener('click', async () => {
+        try {
+          await apiRequest(`/classes/${selectedClassId}/sessions/${s.id}`, { method: 'DELETE' });
+          closeModal();
+          showToast(`Đã xoá buổi ${fmtDateVN(s.session_date)}`);
+          await loadClassData(selectedClassId);
+          await loadClasses(selectedClassId);
+        } catch (err) {
+          showToast('Xoá buổi điểm danh thất bại.', 'error');
+        }
+      });
+    });
+
+    wrap.appendChild(item);
+  });
+}
+
+/* ---------------- Export data as PDF for Current Selected Class ---------------- */
+async function exportCurrentClassPDF() {
+  if (!selectedClassId || !state.currentClass) {
+    showToast('Vui lòng chọn một lớp học để xuất PDF!', 'error');
+    return;
+  }
+
+  const cls = state.currentClass;
+  showToast(`Đang tạo báo cáo PDF cho lớp "${cls.name}"...`);
+
+  try {
+    const students = await apiRequest(`/classes/${cls.id}/students`);
+    const sessions = await apiRequest(`/classes/${cls.id}/sessions`);
+    const totalRevenue = sessions.reduce((sum, s) => sum + (s.total_amount || 0), 0);
+
+    let studentRows = '';
+    students.forEach((s, i) => {
+      studentRows += `<tr>
+        <td style="text-align:center;">${i + 1}</td>
+        <td>
+          <div style="font-weight:600;font-size:13px;">${escapeHtml(s.name)}</div>
+          ${s.school_name || s.school_class ? `<div style="font-size:11px;color:#666;margin-top:2px;">🏫 ${escapeHtml(s.school_name || '')} ${s.school_class ? `· Lớp ${escapeHtml(s.school_class)}` : ''}</div>` : ''}
+        </td>
+        <td style="font-family:monospace;font-size:12px;">${escapeHtml(s.parent_phone || '—')}</td>
+        <td style="text-align:right;font-family:monospace;font-weight:600;color:#2F6E4F;">${fmtVND(s.price_per_session)}</td>
+      </tr>`;
+    });
+
+    let sessionRows = '';
+    sessions.forEach(s => {
+      const presentRecords = (s.records || []).filter(r => r.is_present);
+      const isAllAbsent = presentRecords.length === 0;
+      const presentNames = isAllAbsent
+        ? `<span style="color:#C0392B;font-weight:600;">🚫 Nghỉ toàn lớp — Lý do: ${escapeHtml(s.absence_reason || 'Vắng cả lớp')}</span>`
+        : presentRecords.map(p => escapeHtml(p.student_name_snapshot)).join(', ');
+      const presentCount = presentRecords.length;
+
+      sessionRows += `<tr>
+        <td style="text-align:center;font-family:monospace;font-weight:600;">${fmtDateVN(s.session_date)}</td>
+        <td style="text-align:center;font-weight:600;">${isAllAbsent ? '<span style="color:#C0392B;">0 (Nghỉ)</span>' : `${presentCount} / ${students.length}`}</td>
+        <td style="font-size:11.5px;line-height:1.4;">${presentNames}</td>
+        <td style="text-align:right;font-family:monospace;font-weight:600;color:${isAllAbsent ? '#888' : '#2F6E4F'};">${fmtVND(s.total_amount)}</td>
+      </tr>`;
+    });
+
+    const printHTML = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Báo Cáo Điểm Danh — Lớp ${escapeHtml(cls.name)}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      color: #1a1a2e;
+      padding: 40px;
+      background: #fff;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 3px solid #1B365D;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .logo-container img {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+    }
+    .logo-text-main {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1B365D;
+      letter-spacing: 0.5px;
+      text-align: left;
+    }
+    .logo-text-sub {
+      font-size: 10.5px;
+      color: #D48806;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-align: left;
+    }
+    .header h1 {
+      font-size: 22px;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #1B365D;
+    }
+    .header .class-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #D44A48;
+      margin: 4px 0;
+    }
+    .header .subtitle {
+      font-size: 13px;
+      color: #555;
+    }
+    .header .export-date {
+      font-size: 12px;
+      color: #888;
+      margin-top: 6px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .stat-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-item {
+      background: #f9f8f6;
+      border: 1px solid #e8e4dc;
+      padding: 10px 14px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .stat-item .lbl { font-size: 11px; text-transform: uppercase; color: #777; font-weight: 600; }
+    .stat-item .val { font-size: 18px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+    .stat-item .val.green { color: #2F6E4F; }
+    h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #333;
+      margin: 22px 0 8px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14px;
+      font-size: 12.5px;
+    }
+    thead th {
+      background: #f2ede4;
+      padding: 9px 10px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #444;
+      border-bottom: 2px solid #ccc;
+      font-weight: 600;
+    }
+    tbody td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:nth-child(even) { background: #faf8f5; }
+    .revenue-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding: 14px 20px;
+      background: #edf6f0;
+      border: 2px solid #b8dfc4;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    .revenue-box span:first-child {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #444;
+    }
+    .revenue-amount {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 22px;
+      color: #2F6E4F;
+    }
+    .empty {
+      color: #999;
+      font-style: italic;
+      padding: 10px 0;
+      font-size: 12.5px;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 14px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 11px;
+      color: #888;
+    }
+    @media print {
+      body { padding: 15px; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container">
+      <img src="logo.png" alt="Rocket Learners Logo" onerror="this.src='/logo.png'">
+      <div>
+        <div class="logo-text-main">ROCKET LEARNERS</div>
+        <div class="logo-text-sub">ENGLISH FOR A BRIGHTER FUTURE</div>
+      </div>
+    </div>
+    <h1>BÁO CÁO ĐIỂM DANH LỚP HỌC</h1>
+    <div class="class-title">Lớp: ${escapeHtml(cls.name)}</div>
+    <div class="subtitle">Giáo viên phụ trách: <strong>${escapeHtml(currentUser ? currentUser.full_name : '')}</strong></div>
+    <div class="export-date">Ngày xuất: ${new Date().toLocaleString('vi-VN')}</div>
+  </div>
+
+  <div class="stat-bar">
+    <div class="stat-item"><div class="lbl">Sĩ số</div><div class="val">${students.length} HS</div></div>
+    <div class="stat-item"><div class="lbl">Số buổi học</div><div class="val">${sessions.length}</div></div>
+    <div class="stat-item"><div class="lbl">TB có mặt</div><div class="val">${cls.average_attendance || 0} HS</div></div>
+    <div class="stat-item"><div class="lbl">Tổng doanh thu</div><div class="val green">${fmtVND(totalRevenue)}</div></div>
+  </div>
+
+  <h3>Danh sách học sinh (${students.length})</h3>
+  ${students.length > 0 ? `
+  <table>
+    <thead><tr><th style="width:40px;text-align:center;">STT</th><th>Họ và tên & Trường lớp</th><th style="width:140px;">SĐT Phụ huynh</th><th style="width:130px;text-align:right;">Học phí / buổi</th></tr></thead>
+    <tbody>${studentRows}</tbody>
+  </table>` : '<p class="empty">Chưa có học sinh trong lớp.</p>'}
+
+  <h3>Lịch sử điểm danh (${sessions.length} buổi)</h3>
+  ${sessions.length > 0 ? `
+  <table>
+    <thead><tr><th style="width:100px;text-align:center;">Ngày</th><th style="width:85px;text-align:center;">Có mặt</th><th>Danh sách HS có mặt</th><th style="width:130px;text-align:right;">Tổng thu buổi</th></tr></thead>
+    <tbody>${sessionRows}</tbody>
+  </table>` : '<p class="empty">Chưa có buổi điểm danh nào.</p>'}
+
+  <div class="revenue-box">
+    <span>TỔNG DOANH THU LỚP ${escapeHtml(cls.name.toUpperCase())}</span>
+    <span class="revenue-amount">${fmtVND(totalRevenue)}</span>
+  </div>
+
+  <div class="footer">Rocket Learners · Sổ Điểm Danh · Lớp ${escapeHtml(cls.name)} · Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}</div>
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 400);
+    };
+  <\/script>
+</body>
+</html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printHTML);
+      printWindow.document.close();
+    } else {
+      showToast('Trình duyệt đã chặn popup. Vui lòng cho phép mở popup.', 'error');
+    }
+  } catch (err) {
+    showToast('Lỗi khi xuất dữ liệu PDF cho lớp.', 'error');
+  }
+}
+
+/* ---------------- Application Initialization ---------------- */
+(async function init() {
+  const savedToken = localStorage.getItem(TOKEN_KEY);
+  const savedUser = localStorage.getItem(USER_KEY);
+
+  if (savedToken && savedUser) {
+    currentToken = savedToken;
+    try {
+      currentUser = JSON.parse(savedUser);
+      updateTeacherHeaderDisplay();
+      enterApp();
+
+      // Silent background profile sync
+      try {
+        const me = await apiRequest('/auth/me');
+        currentUser = me;
+        localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+        updateTeacherHeaderDisplay();
+      } catch (err) {
+        console.warn('Background sync note:', err);
+      }
+      return;
+    } catch (e) {
+      console.warn('Invalid saved session format:', e);
+      logout(false);
+    }
+  }
+
+  // If no valid session, show auth screen
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+})();
+</script>
+</body>
+</html>
