@@ -2142,10 +2142,13 @@
    SỔ ĐIỂM DANH — Frontend API Client (FastAPI + PostgreSQL Integration)
    ================================================================ */
 
-// API Base URL — use relative /api when served by FastAPI (port 8000 or any HTTP), fallback to absolute for local file usage
+// API Base URL Configuration with Cloud Fallback
+const CLOUD_API_URL = 'https://attendance-class-api.onrender.com/api';
 const API_BASE_URL = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
-  ? '/api'
-  : 'http://127.0.0.1:8000/api';
+  ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? (window.location.port === '8000' ? '/api' : 'http://127.0.0.1:8000/api')
+    : '/api'
+  : CLOUD_API_URL;
 
 const TOKEN_KEY = 'attendance_teacher_token';
 const USER_KEY = 'attendance_teacher_user';
@@ -2155,7 +2158,6 @@ const THEME_KEY = 'attendance_theme';
 function getPreferredTheme() {
   const saved = localStorage.getItem(THEME_KEY);
   if (saved) return saved;
-  // If user prefers light or default to light/dark
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
 
@@ -2207,7 +2209,7 @@ let currentDate = todayStr();
 let checkedIds = new Set();
 let clockInterval = null;
 
-/* ---------------- API Helper ---------------- */
+/* ---------------- API Helper (with Cloud Direct Fallback) ---------------- */
 async function apiRequest(endpoint, options = {}) {
   const token = currentToken || localStorage.getItem(TOKEN_KEY);
   const headers = {
@@ -2219,11 +2221,21 @@ async function apiRequest(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const primaryUrl = `${API_BASE_URL}${endpoint}`;
+  const fallbackUrl = `${CLOUD_API_URL}${endpoint}`;
+
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers
-    });
+    let response;
+    try {
+      response = await fetch(primaryUrl, { ...options, headers });
+    } catch (netErr) {
+      if (primaryUrl !== fallbackUrl) {
+        console.warn(`Primary route (${primaryUrl}) unreachable, using direct cloud API: ${fallbackUrl}`);
+        response = await fetch(fallbackUrl, { ...options, headers });
+      } else {
+        throw netErr;
+      }
+    }
 
     if (response.status === 401 && endpoint !== '/auth/login' && endpoint !== '/auth/register') {
       console.warn(`401 Unauthorized from ${endpoint}`);
@@ -2243,6 +2255,9 @@ async function apiRequest(endpoint, options = {}) {
     return data;
   } catch (error) {
     console.error(`API Error [${endpoint}]:`, error);
+    if (error.name === 'TypeError' && String(error.message || '').includes('fetch')) {
+      throw new Error('Máy chủ đám mây đang khởi động hoặc mạng gián đoạn. Vui lòng thử lại sau vài giây.');
+    }
     throw error;
   }
 }
