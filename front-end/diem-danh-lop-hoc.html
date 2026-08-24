@@ -127,13 +127,384 @@
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-  /* ========== AUTH / LOCK SCREEN ========== */
+  /* ========== MODERN DARK TECH AURORA + SPACE MESH AUTH SCREEN ========== */
   #authScreen {
-    position: fixed; inset: 0;
-    background: var(--bg-deep);
-    display: flex; align-items: center; justify-content: center;
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 15%, #0d1527 0%, #080c18 50%, #030509 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 1000;
-    animation: fadeIn 0.4s ease;
+    overflow: hidden;
+    perspective: 1200px;
+    padding: 16px;
+  }
+
+  /* Interactive Starfield & Constellation Canvas */
+  #spaceCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Animated Aurora Mesh Gradient Layers */
+  .aurora-bg-mesh {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 2;
+    filter: blur(80px);
+    opacity: 0.85;
+  }
+  .aurora-orb {
+    position: absolute;
+    border-radius: 50%;
+    mix-blend-mode: screen;
+    animation: auroraFloat 18s infinite alternate ease-in-out;
+  }
+  .aurora-orb.orb-1 {
+    width: 580px; height: 580px;
+    background: radial-gradient(circle, rgba(6, 182, 212, 0.45) 0%, rgba(6, 182, 212, 0) 70%);
+    top: -120px; left: -60px;
+    animation-duration: 16s;
+  }
+  .aurora-orb.orb-2 {
+    width: 620px; height: 620px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.48) 0%, rgba(139, 92, 246, 0) 70%);
+    bottom: -160px; right: -60px;
+    animation-duration: 22s;
+    animation-delay: -5s;
+  }
+  .aurora-orb.orb-3 {
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, rgba(255, 110, 108, 0.38) 0%, rgba(255, 110, 108, 0) 70%);
+    top: 35%; left: 55%;
+    animation-duration: 20s;
+    animation-delay: -10s;
+  }
+  .aurora-orb.orb-4 {
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(56, 189, 248, 0) 70%);
+    bottom: 15%; left: 10%;
+    animation-duration: 18s;
+    animation-delay: -3s;
+  }
+
+  @keyframes auroraFloat {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    33% { transform: translate(60px, -40px) scale(1.15) rotate(45deg); }
+    66% { transform: translate(-50px, 60px) scale(0.9) rotate(90deg); }
+    100% { transform: translate(40px, 30px) scale(1.08) rotate(135deg); }
+  }
+
+  /* Animated Cyber Grid Floor */
+  .cyber-grid-floor {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40vh;
+    background:
+      linear-gradient(to top, rgba(7, 10, 20, 0.98), transparent 90%),
+      linear-gradient(90deg, rgba(6, 182, 212, 0.08) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(139, 92, 246, 0.08) 1px, transparent 1px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+    transform: perspective(500px) rotateX(60deg);
+    transform-origin: bottom center;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0.55;
+    animation: gridMove 20s linear infinite;
+  }
+  @keyframes gridMove {
+    0% { background-position: 0 0, 0 0, 0 0; }
+    100% { background-position: 0 0, 0 400px, 0 400px; }
+  }
+
+  /* Glassmorphism Split Card Container */
+  .auth-split-wrapper {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    max-width: 960px;
+    width: 100%;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 28px;
+    box-shadow:
+      0 25px 60px -15px rgba(0, 0, 0, 0.75),
+      0 0 40px -10px rgba(6, 182, 212, 0.3),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+    overflow: hidden;
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.25s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.2, 0, 0.2, 1);
+  }
+
+  /* Left Showcase / Mascot Panel */
+  .auth-showcase-panel {
+    flex: 1;
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.92));
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 38px 34px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-showcase-panel::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(6, 182, 212, 0.14), transparent 60%);
+    pointer-events: none;
+  }
+
+  .auth-mascot-box {
+    position: relative;
+    text-align: center;
+    margin: 16px 0;
+  }
+  .auth-mascot-img {
+    width: 175px;
+    height: 175px;
+    object-fit: cover;
+    border-radius: 24px;
+    box-shadow:
+      0 14px 35px rgba(6, 182, 212, 0.4),
+      0 0 0 2px rgba(255, 255, 255, 0.25);
+    animation: mascotFloat 4s ease-in-out infinite;
+    display: block;
+    margin: 0 auto;
+  }
+  @keyframes mascotFloat {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(2deg); }
+  }
+
+  .mascot-tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(6, 182, 212, 0.15);
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    color: #38bdf8;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  .mascot-speech-bubble {
+    position: absolute;
+    top: -6px;
+    right: 10%;
+    background: rgba(255, 255, 255, 0.95);
+    color: #0f172a;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    animation: popBubble 3s infinite ease-in-out;
+  }
+  @keyframes popBubble {
+    0%, 100% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.06) translateY(-4px); }
+  }
+
+  .auth-feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+    position: relative;
+    z-index: 2;
+  }
+  .auth-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+  }
+  .auth-feature-item:hover {
+    background: rgba(6, 182, 212, 0.08);
+    border-color: rgba(6, 182, 212, 0.25);
+    transform: translateX(4px);
+  }
+
+  /* Right Form Panel */
+  .auth-form-panel {
+    flex: 1.1;
+    padding: 38px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+  }
+
+  .auth-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .auth-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .auth-brand-badge img {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: #fff;
+    padding: 2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  /* Modern Neon Auth Tabs */
+  .modern-auth-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .modern-auth-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #94a3b8;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+  }
+  .modern-auth-tab.active {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(139, 92, 246, 0.25));
+    color: #ffffff;
+    border: 1px solid rgba(6, 182, 212, 0.45);
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);
+  }
+
+  /* Cyber Input Fields */
+  .cyber-input-wrap {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .cyber-input-wrap label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+  .cyber-input-inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .cyber-input-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 15px;
+    color: #64748b;
+    pointer-events: none;
+    transition: color 0.2s ease;
+  }
+  .cyber-input-wrap input {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #f8fafc;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.25s ease;
+  }
+  .cyber-input-wrap input::placeholder {
+    color: #475569;
+  }
+  .cyber-input-wrap input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    background: rgba(15, 23, 42, 0.9);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.22), 0 0 20px rgba(56, 189, 248, 0.18);
+  }
+  .cyber-input-wrap input:focus ~ .cyber-input-icon,
+  .cyber-input-inner:focus-within .cyber-input-icon {
+    color: #38bdf8;
+  }
+
+  .auth-error {
+    color: #ff6e6c;
+    font-size: 12px;
+    min-height: 18px;
+    margin-bottom: 12px;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  /* Radiant Cosmic Submit Button */
+  .btn-cosmic-submit {
+    width: 100%;
+    padding: 13px 20px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #06b6d4, #6366f1, #ec4899);
+    background-size: 200% 200%;
+    color: #ffffff;
+    font-size: 14.5px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .btn-cosmic-submit:hover {
+    background-position: 100% 100%;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(6, 182, 212, 0.5);
+  }
+  .btn-cosmic-submit:active {
+    transform: translateY(0);
+  }
+  .btn-cosmic-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -153,106 +524,6 @@
   @keyframes slideInRight {
     from { opacity: 0; transform: translateX(20px); }
     to { opacity: 1; transform: translateX(0); }
-  }
-
-  .auth-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    box-shadow: var(--shadow-lg), var(--shadow-glow);
-    padding: 40px 34px;
-    width: 400px;
-    max-width: 92vw;
-    animation: slideUp 0.5s ease 0.15s both;
-  }
-  .auth-card .stamp-icon {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    border: 3px solid var(--accent);
-    color: var(--accent);
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 16px;
-    font-size: 26px;
-    animation: stampIn 0.6s ease 0.3s both;
-    box-shadow: 0 0 25px var(--accent-glow);
-  }
-  .auth-card h1 {
-    font-size: 22px;
-    margin: 0 0 6px;
-    text-align: center;
-    background: linear-gradient(135deg, var(--text-primary), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .auth-card .sub-desc {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin: 0 0 20px;
-    text-align: center;
-    line-height: 1.5;
-  }
-
-  /* Auth Tabs */
-  .auth-tabs {
-    display: flex;
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xs);
-    padding: 3px;
-    margin-bottom: 20px;
-  }
-  .auth-tab {
-    flex: 1;
-    text-align: center;
-    padding: 8px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: var(--transition);
-  }
-  .auth-tab.active {
-    background: var(--bg-surface);
-    color: var(--text-primary);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
-
-  .auth-form-group {
-    margin-bottom: 14px;
-  }
-  .auth-form-group label {
-    display: block;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    font-weight: 500;
-  }
-  .auth-form-group input {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xs);
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    background: var(--bg-input);
-    color: var(--text-primary);
-    transition: var(--transition);
-  }
-  .auth-form-group input:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
-    background: var(--bg-input-focus);
-  }
-  .auth-error {
-    color: var(--accent);
-    font-size: 12px;
-    min-height: 18px;
-    margin-bottom: 12px;
-    text-align: center;
   }
 
   /* ========== BUTTONS ========== */
@@ -1683,54 +1954,135 @@
 </head>
 <body>
 
-<!-- ========== AUTH / LOGIN MODAL SCREEN ========== -->
+<!-- ========== AUTH / LOGIN MODAL SCREEN (Dark Tech / Aurora Mesh + Space Cartoon Mascot) ========== -->
 <div id="authScreen">
-  <div class="auth-card">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
-      <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Chuyển chế độ Sáng (Kem) / Tối">
-        <span class="theme-icon">☀️</span> <span class="theme-label">Sáng</span>
-      </button>
-    </div>
-    <img src="../image/logo.png" class="auth-logo-img" alt="Rocket Learners Logo" onerror="this.onerror=null; this.src='/image/logo.png';">
-    <h1 class="display" style="font-size:24px;margin-bottom:2px;">Rocket Learners</h1>
-    <p class="sub-desc" style="color:var(--accent);font-weight:600;margin-bottom:18px;">English for a Brighter Future · Sổ Điểm Danh</p>
+  <!-- Interactive Background Canvas (Stars, Constellations, Space Dust) -->
+  <canvas id="spaceCanvas"></canvas>
+
+  <!-- Aurora Mesh Gradient Orbs -->
+  <div class="aurora-bg-mesh">
+    <div class="aurora-orb orb-1"></div>
+    <div class="aurora-orb orb-2"></div>
+    <div class="aurora-orb orb-3"></div>
+    <div class="aurora-orb orb-4"></div>
+  </div>
+
+  <!-- Cyber Tech Grid Floor -->
+  <div class="cyber-grid-floor"></div>
+
+  <!-- Glassmorphism Split Card Container -->
+  <div class="auth-split-wrapper" id="authSplitCard">
     
-    <div class="auth-tabs">
-      <div class="auth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">Đăng Nhập</div>
-      <div class="auth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">Đăng Ký</div>
+    <!-- Left Panel: Cartoon Rocket Mascot & Highlights -->
+    <div class="auth-showcase-panel">
+      <div style="position:relative;z-index:2;">
+        <div class="mascot-tag-badge">
+          <span>✨</span> English for a Brighter Future
+        </div>
+        <h2 class="display" style="font-size:23px;margin:0 0 6px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,0.5);">
+          Rocket Learners
+        </h2>
+        <p style="font-size:12.5px;color:#94a3b8;margin:0;line-height:1.5;">
+          Sổ Điểm Danh & Quản Lý Lớp Học Thông Minh
+        </p>
+      </div>
+
+      <div class="auth-mascot-box">
+        <img src="../image/rocket-mascot.jpg" class="auth-mascot-img" alt="Rocket Explorer Mascot" onerror="this.onerror=null; this.src='/image/rocket-mascot.jpg';">
+        <div class="mascot-speech-bubble">
+          Ready to Learn! 🚀
+        </div>
+      </div>
+
+      <div class="auth-feature-list">
+        <div class="auth-feature-item">
+          <span>⚡</span>
+          <span>Điểm danh 1-chạm & Tính học phí tự động</span>
+        </div>
+        <div class="auth-feature-item">
+          <span>📊</span>
+          <span>Chốt kỳ doanh thu tháng & Xuất PDF chuẩn</span>
+        </div>
+        <div class="auth-feature-item">
+          <span>🔒</span>
+          <span>Bảo mật đám mây 24/7 an toàn cho giáo viên</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Login Form -->
-    <form id="loginForm">
-      <div class="auth-form-group">
-        <label for="loginEmail">Email giáo viên</label>
-        <input type="email" id="loginEmail" placeholder="teacher@example.com" required autocomplete="email">
+    <!-- Right Panel: Modern Glass Form -->
+    <div class="auth-form-panel">
+      <div class="auth-header-row">
+        <div class="auth-brand-badge">
+          <img src="../image/logo.png" alt="Logo" onerror="this.onerror=null; this.src='/image/logo.png';">
+          <span style="font-weight:700;font-size:15px;color:#fff;">Rocket Learners</span>
+        </div>
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Chuyển chế độ Sáng (Kem) / Tối">
+          <span class="theme-icon">☀️</span> <span class="theme-label">Sáng</span>
+        </button>
       </div>
-      <div class="auth-form-group">
-        <label for="loginPassword">Mật khẩu</label>
-        <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
-      </div>
-      <div class="auth-error" id="authError"></div>
-      <button type="submit" class="btn-primary" id="loginBtnSubmit">Đăng nhập vào sổ</button>
-    </form>
 
-    <!-- Register Form -->
-    <form id="registerForm" style="display:none;">
-      <div class="auth-form-group">
-        <label for="regFullName">Họ và tên giáo viên</label>
-        <input type="text" id="regFullName" placeholder="Cô Nguyễn Thị Mai" required autocomplete="name">
+      <div class="modern-auth-tabs">
+        <div class="modern-auth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">
+          🔐 Đăng Nhập
+        </div>
+        <div class="modern-auth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">
+          ✨ Đăng Ký
+        </div>
       </div>
-      <div class="auth-form-group">
-        <label for="regEmail">Email giáo viên</label>
-        <input type="email" id="regEmail" placeholder="teacher@example.com" required autocomplete="email">
-      </div>
-      <div class="auth-form-group">
-        <label for="regPassword">Mật khẩu</label>
-        <input type="password" id="regPassword" placeholder="Ít nhất 4 ký tự" required autocomplete="new-password">
-      </div>
-      <div class="auth-error" id="regError"></div>
-      <button type="submit" class="btn-primary" id="regBtnSubmit">Tạo tài khoản giáo viên</button>
-    </form>
+
+      <!-- Login Form -->
+      <form id="loginForm">
+        <div class="cyber-input-wrap">
+          <label for="loginEmail">Email giáo viên</label>
+          <div class="cyber-input-inner">
+            <span class="cyber-input-icon">📧</span>
+            <input type="email" id="loginEmail" placeholder="teacher@example.com" required autocomplete="email">
+          </div>
+        </div>
+        <div class="cyber-input-wrap">
+          <label for="loginPassword">Mật khẩu</label>
+          <div class="cyber-input-inner">
+            <span class="cyber-input-icon">🔑</span>
+            <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+        </div>
+        <div class="auth-error" id="authError"></div>
+        <button type="submit" class="btn-cosmic-submit" id="loginBtnSubmit">
+          <span>🚀</span> Đăng nhập vào sổ
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" style="display:none;">
+        <div class="cyber-input-wrap">
+          <label for="regFullName">Họ và tên giáo viên</label>
+          <div class="cyber-input-inner">
+            <span class="cyber-input-icon">👤</span>
+            <input type="text" id="regFullName" placeholder="Cô Nguyễn Thị Mai" required autocomplete="name">
+          </div>
+        </div>
+        <div class="cyber-input-wrap">
+          <label for="regEmail">Email giáo viên</label>
+          <div class="cyber-input-inner">
+            <span class="cyber-input-icon">📧</span>
+            <input type="email" id="regEmail" placeholder="teacher@example.com" required autocomplete="email">
+          </div>
+        </div>
+        <div class="cyber-input-wrap">
+          <label for="regPassword">Mật khẩu</label>
+          <div class="cyber-input-inner">
+            <span class="cyber-input-icon">🔑</span>
+            <input type="password" id="regPassword" placeholder="Ít nhất 4 ký tự" required autocomplete="new-password">
+          </div>
+        </div>
+        <div class="auth-error" id="regError"></div>
+        <button type="submit" class="btn-cosmic-submit" id="regBtnSubmit">
+          <span>✨</span> Tạo tài khoản giáo viên
+        </button>
+      </form>
+    </div>
+
   </div>
 </div>
 
@@ -3639,6 +3991,168 @@ async function exportPeriodPDF(periodId) {
   // If no valid session, show auth screen
   document.getElementById('authScreen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
+})();
+
+/* ================================================================
+   SPACE CANVAS, PARTICLE CONSTELLATIONS & MOUSE PARALLAX ENGINE
+   ================================================================ */
+(function initSpaceVisuals() {
+  const canvas = document.getElementById('spaceCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let width, height;
+
+  const stars = [];
+  const starCount = 85;
+  const colors = ['#38BDF8', '#818CF8', '#C084FC', '#F472B6', '#FDE047', '#FFFFFF'];
+  
+  let mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+  const shootingStars = [];
+
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Initialize stars
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() * 2.2 + 0.6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: Math.random() * 0.7 + 0.3,
+      twinkleSpeed: Math.random() * 0.03 + 0.01,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      depth: Math.random() * 0.8 + 0.2
+    });
+  }
+
+  // Create shooting star periodically
+  function maybeSpawnShootingStar() {
+    if (Math.random() < 0.015 && shootingStars.length < 3) {
+      shootingStars.push({
+        x: Math.random() * width * 0.8,
+        y: Math.random() * height * 0.4,
+        length: Math.random() * 80 + 50,
+        speed: Math.random() * 10 + 12,
+        angle: Math.PI / 4 + (Math.random() - 0.5) * 0.2,
+        opacity: 1,
+        color: Math.random() > 0.5 ? '#38BDF8' : '#F472B6'
+      });
+    }
+  }
+
+  // Mouse Parallax listener
+  window.addEventListener('mousemove', (e) => {
+    mouse.targetX = (e.clientX - width / 2) / (width / 2);
+    mouse.targetY = (e.clientY - height / 2) / (height / 2);
+
+    // 3D Tilt on Auth Glass Card
+    const card = document.getElementById('authSplitCard');
+    if (card) {
+      const tiltX = -mouse.targetY * 6;
+      const tiltY = mouse.targetX * 6;
+      card.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+    }
+  });
+
+  // Render loop
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+
+    // Smooth mouse lerp
+    mouse.x += (mouse.targetX - mouse.x) * 0.05;
+    mouse.y += (mouse.targetY - mouse.y) * 0.05;
+
+    // Draw Constellation Lines
+    for (let i = 0; i < stars.length; i++) {
+      for (let j = i + 1; j < stars.length; j++) {
+        const dx = stars[i].x - stars[j].x;
+        const dy = stars[i].y - stars[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 90) {
+          const lineAlpha = (1 - dist / 90) * 0.18 * stars[i].alpha;
+          ctx.strokeStyle = `rgba(56, 189, 248, ${lineAlpha})`;
+          ctx.lineWidth = 0.75;
+          ctx.beginPath();
+          ctx.moveTo(stars[i].x + mouse.x * stars[i].depth * 25, stars[i].y + mouse.y * stars[i].depth * 25);
+          ctx.lineTo(stars[j].x + mouse.x * stars[j].depth * 25, stars[j].y + mouse.y * stars[j].depth * 25);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw Stars
+    for (let s of stars) {
+      s.x += s.vx;
+      s.y += s.vy;
+      if (s.x < 0) s.x = width;
+      if (s.x > width) s.x = 0;
+      if (s.y < 0) s.y = height;
+      if (s.y > height) s.y = 0;
+
+      s.alpha += Math.sin(Date.now() * s.twinkleSpeed * 0.1) * 0.015;
+      s.alpha = Math.max(0.2, Math.min(0.95, s.alpha));
+
+      const px = s.x + mouse.x * s.depth * 25;
+      const py = s.y + mouse.y * s.depth * 25;
+
+      ctx.save();
+      ctx.globalAlpha = s.alpha;
+      ctx.fillStyle = s.color;
+      ctx.shadowBlur = s.size > 1.8 ? 8 : 0;
+      ctx.shadowColor = s.color;
+      ctx.beginPath();
+      ctx.arc(px, py, s.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Draw Shooting Stars
+    maybeSpawnShootingStar();
+    for (let i = shootingStars.length - 1; i >= 0; i--) {
+      const ss = shootingStars[i];
+      ss.x += Math.cos(ss.angle) * ss.speed;
+      ss.y += Math.sin(ss.angle) * ss.speed;
+      ss.opacity -= 0.02;
+
+      if (ss.opacity <= 0 || ss.x > width || ss.y > height) {
+        shootingStars.splice(i, 1);
+        continue;
+      }
+
+      ctx.save();
+      const grad = ctx.createLinearGradient(
+        ss.x, ss.y,
+        ss.x - Math.cos(ss.angle) * ss.length,
+        ss.y - Math.sin(ss.angle) * ss.length
+      );
+      grad.addColorStop(0, ss.color);
+      grad.addColorStop(1, 'transparent');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = ss.opacity;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = ss.color;
+      ctx.beginPath();
+      ctx.moveTo(ss.x, ss.y);
+      ctx.lineTo(
+        ss.x - Math.cos(ss.angle) * ss.length,
+        ss.y - Math.sin(ss.angle) * ss.length
+      );
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
 })();
 </script>
 </body>
