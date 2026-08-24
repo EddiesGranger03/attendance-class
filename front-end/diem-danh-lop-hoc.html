@@ -534,6 +534,129 @@
     box-shadow: none;
   }
 
+  /* ========== LIGHT THEME OVERRIDES FOR AUTH SCREEN ========== */
+  [data-theme="light"] #authScreen {
+    background: radial-gradient(circle at 50% 15%, #FAF6ED 0%, #F0E8D9 50%, #E5DAC6 100%);
+  }
+  [data-theme="light"] .aurora-orb.orb-1 {
+    background: radial-gradient(circle, rgba(224, 83, 73, 0.3) 0%, rgba(224, 83, 73, 0) 70%);
+  }
+  [data-theme="light"] .aurora-orb.orb-2 {
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(99, 102, 241, 0) 70%);
+  }
+  [data-theme="light"] .aurora-orb.orb-3 {
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0) 70%);
+  }
+  [data-theme="light"] .aurora-orb.orb-4 {
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, rgba(56, 189, 248, 0) 70%);
+  }
+  [data-theme="light"] .cyber-grid-floor {
+    background:
+      linear-gradient(to top, rgba(245, 239, 230, 0.96), transparent 90%),
+      linear-gradient(90deg, rgba(224, 83, 73, 0.09) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(99, 102, 241, 0.09) 1px, transparent 1px);
+    opacity: 0.75;
+  }
+  [data-theme="light"] .auth-split-wrapper {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(160, 140, 120, 0.25);
+    box-shadow:
+      0 25px 60px -15px rgba(80, 60, 40, 0.16),
+      0 0 40px -10px rgba(224, 83, 73, 0.15),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+  }
+  [data-theme="light"] .auth-showcase-panel {
+    background: linear-gradient(145deg, #FFFDF9 0%, #F5EFE4 100%);
+    border-right: 1px solid rgba(160, 140, 120, 0.2);
+  }
+  [data-theme="light"] .auth-showcase-panel::before {
+    background: radial-gradient(circle at center, rgba(224, 83, 73, 0.1), transparent 60%);
+  }
+  [data-theme="light"] .auth-showcase-panel h2 {
+    color: #2C2621 !important;
+    text-shadow: none !important;
+  }
+  [data-theme="light"] .auth-showcase-panel p {
+    color: #635A50 !important;
+  }
+  [data-theme="light"] .mascot-tag-badge {
+    background: rgba(224, 83, 73, 0.12);
+    border-color: rgba(224, 83, 73, 0.35);
+    color: #E05349;
+  }
+  [data-theme="light"] .auth-logo-floating-wrap {
+    background: #FFFFFF;
+    border-color: rgba(224, 83, 73, 0.25);
+    box-shadow:
+      0 16px 40px rgba(224, 83, 73, 0.2),
+      0 0 30px rgba(245, 158, 11, 0.15),
+      inset 0 1px 1px #FFFFFF;
+  }
+  [data-theme="light"] .mascot-speech-bubble {
+    background: #2C2621;
+    color: #FFFFFF;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+  [data-theme="light"] .auth-feature-item {
+    color: #3D352E;
+    background: rgba(255, 255, 255, 0.75);
+    border-color: rgba(160, 140, 120, 0.2);
+    box-shadow: 0 2px 6px rgba(80, 60, 40, 0.04);
+  }
+  [data-theme="light"] .auth-feature-item:hover {
+    background: #FFFFFF;
+    border-color: rgba(224, 83, 73, 0.4);
+    box-shadow: 0 4px 12px rgba(224, 83, 73, 0.12);
+  }
+  [data-theme="light"] .auth-brand-badge span {
+    color: #2C2621 !important;
+  }
+  [data-theme="light"] .modern-auth-tabs {
+    background: #EFE8DA;
+    border-color: rgba(160, 140, 120, 0.2);
+  }
+  [data-theme="light"] .modern-auth-tab {
+    color: #8E8376;
+  }
+  [data-theme="light"] .modern-auth-tab.active {
+    background: #FFFFFF;
+    color: #E05349;
+    border-color: rgba(224, 83, 73, 0.35);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  }
+  [data-theme="light"] .cyber-input-wrap label {
+    color: #52473D;
+  }
+  [data-theme="light"] .cyber-input-wrap input {
+    background: #FFFFFF;
+    border-color: rgba(160, 140, 120, 0.28);
+    color: #2C2621;
+  }
+  [data-theme="light"] .cyber-input-wrap input::placeholder {
+    color: #A39688;
+  }
+  [data-theme="light"] .cyber-input-wrap input:focus {
+    background: #FFFFFF;
+    border-color: #E05349;
+    box-shadow: 0 0 0 3px rgba(224, 83, 73, 0.18), 0 0 15px rgba(224, 83, 73, 0.12);
+  }
+  [data-theme="light"] .cyber-input-icon {
+    color: #8E8376;
+  }
+  [data-theme="light"] .cyber-input-wrap input:focus ~ .cyber-input-icon,
+  [data-theme="light"] .cyber-input-inner:focus-within .cyber-input-icon {
+    color: #E05349;
+  }
+  [data-theme="light"] .btn-cosmic-submit {
+    background: linear-gradient(135deg, #E05349, #F59E0B, #E11D48);
+    box-shadow: 0 6px 22px rgba(224, 83, 73, 0.35);
+  }
+  [data-theme="light"] .btn-cosmic-submit:hover {
+    box-shadow: 0 10px 28px rgba(224, 83, 73, 0.45);
+  }
+
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(30px) scale(0.97); }
@@ -4112,6 +4235,8 @@ async function exportPeriodPDF(periodId) {
     mouse.x += (mouse.targetX - mouse.x) * 0.05;
     mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
     // Draw Constellation Lines
     for (let i = 0; i < stars.length; i++) {
       for (let j = i + 1; j < stars.length; j++) {
@@ -4120,8 +4245,8 @@ async function exportPeriodPDF(periodId) {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < 90) {
-          const lineAlpha = (1 - dist / 90) * 0.18 * stars[i].alpha;
-          ctx.strokeStyle = `rgba(56, 189, 248, ${lineAlpha})`;
+          const lineAlpha = (1 - dist / 90) * (isLight ? 0.25 : 0.18) * stars[i].alpha;
+          ctx.strokeStyle = isLight ? `rgba(224, 83, 73, ${lineAlpha})` : `rgba(56, 189, 248, ${lineAlpha})`;
           ctx.lineWidth = 0.75;
           ctx.beginPath();
           ctx.moveTo(stars[i].x + mouse.x * stars[i].depth * 25, stars[i].y + mouse.y * stars[i].depth * 25);
@@ -4147,10 +4272,10 @@ async function exportPeriodPDF(periodId) {
       const py = s.y + mouse.y * s.depth * 25;
 
       ctx.save();
-      ctx.globalAlpha = s.alpha;
-      ctx.fillStyle = s.color;
-      ctx.shadowBlur = s.size > 1.8 ? 8 : 0;
-      ctx.shadowColor = s.color;
+      ctx.globalAlpha = isLight ? Math.min(1, s.alpha * 1.2) : s.alpha;
+      ctx.fillStyle = isLight ? (s.color === '#FFFFFF' ? '#E05349' : s.color) : s.color;
+      ctx.shadowBlur = s.size > 1.8 ? (isLight ? 4 : 8) : 0;
+      ctx.shadowColor = ctx.fillStyle;
       ctx.beginPath();
       ctx.arc(px, py, s.size, 0, Math.PI * 2);
       ctx.fill();
@@ -4176,13 +4301,14 @@ async function exportPeriodPDF(periodId) {
         ss.x - Math.cos(ss.angle) * ss.length,
         ss.y - Math.sin(ss.angle) * ss.length
       );
-      grad.addColorStop(0, ss.color);
+      const trailColor = isLight ? '#E05349' : ss.color;
+      grad.addColorStop(0, trailColor);
       grad.addColorStop(1, 'transparent');
       ctx.strokeStyle = grad;
       ctx.lineWidth = 2;
       ctx.globalAlpha = ss.opacity;
       ctx.shadowBlur = 10;
-      ctx.shadowColor = ss.color;
+      ctx.shadowColor = trailColor;
       ctx.beginPath();
       ctx.moveTo(ss.x, ss.y);
       ctx.lineTo(
