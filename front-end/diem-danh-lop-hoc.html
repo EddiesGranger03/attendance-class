@@ -2000,6 +2000,13 @@ function switchAuthTab(tab) {
   }
 }
 
+/* ---------------- Instant Background Pre-warm ---------------- */
+(function prewarmServer() {
+  try {
+    fetch(`${API_BASE_URL}/health`, { method: 'GET' }).catch(() => {});
+  } catch (e) {}
+})();
+
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
@@ -2010,6 +2017,13 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   errorEl.textContent = '';
   btn.disabled = true;
   btn.textContent = 'Đang đăng nhập...';
+
+  // Progressive loading status if server was in sleep mode
+  const wakeTimer = setTimeout(() => {
+    if (btn.disabled) {
+      btn.textContent = 'Đang khởi động máy chủ (khoảng vài giây)...';
+    }
+  }, 2000);
 
   try {
     const data = await apiRequest('/auth/login', {
@@ -2027,6 +2041,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   } catch (err) {
     errorEl.textContent = err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại Email hoặc Mật khẩu.';
   } finally {
+    clearTimeout(wakeTimer);
     btn.disabled = false;
     btn.textContent = 'Đăng nhập vào sổ';
   }
@@ -2043,6 +2058,12 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
   errorEl.textContent = '';
   btn.disabled = true;
   btn.textContent = 'Đang tạo tài khoản...';
+
+  const wakeTimer = setTimeout(() => {
+    if (btn.disabled) {
+      btn.textContent = 'Đang khởi động máy chủ (khoảng vài giây)...';
+    }
+  }, 2000);
 
   try {
     await apiRequest('/auth/register', {
@@ -2066,6 +2087,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
   } catch (err) {
     errorEl.textContent = err.message || 'Đăng ký không thành công.';
   } finally {
+    clearTimeout(wakeTimer);
     btn.disabled = false;
     btn.textContent = 'Tạo tài khoản giáo viên';
   }
