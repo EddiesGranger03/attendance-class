@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Environment Variables (Bảo mật thông tin & secret key)
+.env
+backend/.env
+
+# Database (Không push file database SQLite local lên repo)
+*.db
+*.sqlite3
+attendance.db
+database/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs & temporary files
+*.log
+scratch/
