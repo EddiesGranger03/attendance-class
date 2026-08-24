@@ -17,15 +17,15 @@ router = APIRouter(prefix="/auth", tags=["Xác thực Giáo viên"])
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)) -> Any:
     """Đăng ký tài khoản giáo viên mới."""
-    user = db.query(User).filter(User.email == user_in.email.lower()).first()
+    user = db.query(User).filter(User.email == user_in.email.lower().strip()).first()
     if user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email này đã được đăng ký trên hệ thống."
+            detail="Email này đã tồn tại trong hệ thống. Vui lòng chọn địa chỉ email khác hoặc chuyển sang Đăng Nhập."
         )
     
     new_user = User(
-        email=user_in.email.lower(),
+        email=user_in.email.lower().strip(),
         full_name=user_in.full_name.strip(),
         hashed_password=get_password_hash(user_in.password)
     )

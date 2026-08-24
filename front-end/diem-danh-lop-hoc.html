@@ -489,11 +489,30 @@
 
   .auth-error {
     color: #ff6e6c;
-    font-size: 12px;
+    font-size: 12.5px;
     min-height: 18px;
     margin-bottom: 12px;
     text-align: center;
-    font-weight: 500;
+    font-weight: 600;
+    line-height: 1.4;
+    transition: all 0.3s ease;
+  }
+  .auth-error:not(:empty) {
+    background: rgba(255, 110, 108, 0.12);
+    border: 1px solid rgba(255, 110, 108, 0.35);
+    padding: 8px 12px;
+    border-radius: 8px;
+    animation: shakeError 0.4s ease;
+  }
+  [data-theme="light"] .auth-error:not(:empty) {
+    background: rgba(224, 83, 73, 0.1);
+    border: 1px solid rgba(224, 83, 73, 0.35);
+    color: #C64137;
+  }
+  @keyframes shakeError {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
   }
 
   /* Radiant Cosmic Submit Button */
