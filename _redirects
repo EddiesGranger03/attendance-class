@@ -1,0 +1,3 @@
+/api/*  https://attendance-class-api.onrender.com/api/:splat  200!
+/image/*  /image/:splat  200
+/  /front-end/diem-danh-lop-hoc.html  200
