@@ -3696,6 +3696,9 @@ function renderMain() {
         <button type="button" class="btn-export-class" id="exportClassBtn" title="In & Xuất báo cáo PDF cho lớp ${escapeHtml(cls.name)}">
           📄 Xuất PDF lớp này
         </button>
+        <button type="button" class="btn-export-class" id="exportClassExcelBtn" title="Xuất báo cáo Excel (.xlsx) toàn lớp theo từng học sinh" style="background:linear-gradient(135deg,#217346,#1a5c38);color:#fff;border-color:transparent;">
+          📊 Excel cả lớp
+        </button>
       </div>
     </div>
 
@@ -3776,6 +3779,10 @@ function renderMain() {
   document.getElementById('exportClassBtn').addEventListener('click', () => {
     exportCurrentClassPDF();
   });
+
+  // Export Excel Button event in class header
+  const exportClassExcelBtnEl = document.getElementById('exportClassExcelBtn');
+  if (exportClassExcelBtnEl) exportClassExcelBtnEl.addEventListener('click', () => exportClassExcel());
 
   const periodHistBtn = document.getElementById('openPeriodHistBtn');
   if (periodHistBtn) periodHistBtn.addEventListener('click', () => openPeriodHistoryModal());
@@ -5990,6 +5997,158 @@ async function exportStudentExcel(studentId) {
     showToast(`✅ Đã tải file Excel cho "${student.name}"!`);
   } catch (err) {
     showToast('Lỗi khi xuất Excel: ' + (err.message || ''), 'error');
+  }
+}
+
+/* ---------------- Export class-level Excel report (format: per-student blocks with attended dates by month) ---------------- */
+async function exportClassExcel() {
+  if (!selectedClassId || !state.currentClass) return;
+  const cls = state.currentClass;
+
+  showToast(`\u0110ang t\u1ea1o file Excel cho l\u1edbp "${cls.name}"...`);
+
+  try {
+    // Load SheetJS
+    if (typeof XLSX === 'undefined') {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    const students = state.students || await apiRequest(`/classes/${cls.id}/students`);
+    const sessions  = state.sessions  || await apiRequest(`/classes/${cls.id}/sessions`);
+
+    if (!students.length) { showToast('L\u1edbp ch\u01b0a c\u00f3 h\u1ecdc sinh n\u00e0o.', 'error'); return; }
+
+    // --- Group sessions by YYYY-MM ---
+    const sessionsByMonth = {};
+    sessions.forEach(sess => {
+      const [yr, mo] = sess.session_date.split('-');
+      const key = `${yr}-${mo}`;
+      if (!sessionsByMonth[key]) sessionsByMonth[key] = [];
+      sessionsByMonth[key].push(sess);
+    });
+    const months = Object.keys(sessionsByMonth).sort();
+
+    if (!months.length) { showToast('L\u1edbp ch\u01b0a c\u00f3 bu\u1ed5i h\u1ecdc n\u00e0o.', 'error'); return; }
+
+    // Period label for the merged header, e.g. "TH\u00c1NG 01 + 02/2026"
+    const monthLabels = months.map(m => {
+      const [yr, mo] = m.split('-');
+      return `T${parseInt(mo)}/${yr}`;
+    });
+    const periodHeader = `T\u1ed4NG S\u1ed0 BU\u1ed4I H\u1eccC ${monthLabels.join(' + ')}`;
+
+    // Max sessions in any single month (determines how many date-columns we need)
+    const maxCols = months.reduce((mx, m) => Math.max(mx, sessionsByMonth[m].length), 0);
+
+    // Column layout:
+    // 0: STT | 1: H\u1ecd t\u00ean | 2: Th\u00e1ng label | 3..(3+maxCols-1): date slots | (3+maxCols): T\u1ed4NG
+    const TOTAL_COL = 3 + maxCols;
+    const TOTAL_COLS = TOTAL_COL + 1;
+
+    const wsData  = [];
+    const merges  = [];
+    let row = 0;
+
+    students.forEach((student, sIdx) => {
+      // ---- Header row for this student block ----
+      const hdr = Array(TOTAL_COLS).fill('');
+      hdr[0] = 'STT';
+      hdr[1] = 'H\u1cd0 T\u00caN';
+      hdr[2] = periodHeader;   // will be merged across cols 2..(TOTAL_COL-1)
+      hdr[TOTAL_COL] = 'T\u1ed4NG';
+      wsData.push(hdr);
+
+      // Merge "periodHeader" across date section
+      merges.push({ s: { r: row, c: 2 }, e: { r: row, c: TOTAL_COL - 1 } });
+      row++;
+
+      // ---- Calculate per-month attendance ----
+      let totalPresent = 0;
+      const monthRows = [];
+
+      months.forEach(mKey => {
+        const [yr, mo] = mKey.split('-');
+        const label = `Th\u00e1ng ${parseInt(mo)}`;
+        const monthSess = sessionsByMonth[mKey];
+
+        const attendedDays = monthSess
+          .filter(sess => {
+            const rec = (sess.records || []).find(r => r.student_id === student.id);
+            return rec && rec.is_present;
+          })
+          .map(sess => parseInt(sess.session_date.split('-')[2]))
+          .sort((a, b) => a - b);
+
+        totalPresent += attendedDays.length;
+        monthRows.push({ label, days: attendedDays });
+      });
+
+      // Only include months where student attended at least once
+      const activeMonthRows = monthRows.filter(mr => mr.days.length > 0);
+      // If student never attended, show one empty row
+      const displayRows = activeMonthRows.length > 0 ? activeMonthRows : [{ label: 'Th\u00e1ng —', days: [] }];
+
+      const price = Number(student.price_per_session || 0);
+      const totalFee = totalPresent * price;
+      const priceStr = price.toLocaleString('vi-VN');
+      const totalStr = totalPresent > 0
+        ? `${priceStr} \u00d7 ${totalPresent} = ${totalFee.toLocaleString('vi-VN')} \u0110`
+        : '0 \u0110';
+
+      const firstDataRow = row;
+
+      displayRows.forEach((mr, mIdx) => {
+        const dataRow = Array(TOTAL_COLS).fill('');
+        if (mIdx === 0) {
+          dataRow[0] = sIdx + 1;
+          dataRow[1] = student.name;
+          dataRow[TOTAL_COL] = totalStr;
+        }
+        dataRow[2] = mr.label;
+        mr.days.forEach((d, i) => { dataRow[3 + i] = d; });
+        wsData.push(dataRow);
+        row++;
+      });
+
+      // Merge STT, name, total vertically across month rows
+      if (displayRows.length > 1) {
+        merges.push({ s: { r: firstDataRow, c: 0 }, e: { r: row - 1, c: 0 } });
+        merges.push({ s: { r: firstDataRow, c: 1 }, e: { r: row - 1, c: 1 } });
+        merges.push({ s: { r: firstDataRow, c: TOTAL_COL }, e: { r: row - 1, c: TOTAL_COL } });
+      }
+
+      // Empty separator row between students
+      wsData.push(Array(TOTAL_COLS).fill(''));
+      row++;
+    });
+
+    // Build worksheet
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!merges'] = merges;
+
+    // Column widths
+    const colWidths = [{ wch: 5 }, { wch: 22 }, { wch: 12 }];
+    for (let i = 0; i < maxCols; i++) colWidths.push({ wch: 6 });
+    colWidths.push({ wch: 34 });
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `L\u1edbp ${cls.name}`.substring(0, 31));
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('vi-VN').replace(/\//g, '-');
+    const safeCls = (cls.name || 'Lop').replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+    XLSX.writeFile(wb, `BaoCao_Lop_${safeCls}_${dateStr}.xlsx`);
+
+    showToast(`\u2705 \u0110\u00e3 t\u1ea3i file Excel l\u1edbp "${cls.name}"!`);
+  } catch (err) {
+    showToast('L\u1ed7i khi xu\u1ea5t Excel l\u1edbp: ' + (err.message || ''), 'error');
   }
 }
 
