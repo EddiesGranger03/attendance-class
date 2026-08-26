@@ -3841,7 +3841,7 @@ function renderMain() {
             </div>
             <div>
               <label>Học phí / buổi (VNĐ) <span style="color:var(--accent);">*</span></label>
-              <input type="text" id="popStudentPrice" class="mono" placeholder="200000" required autocomplete="off">
+              <input type="text" id="popStudentPrice" class="mono" placeholder="200000" required autocomplete="off" inputmode="numeric" oninput="this.value=this.value.replace(/[^\d]/g,'')">
             </div>
           </div>
 
@@ -4160,7 +4160,7 @@ function renderRoster(students) {
               </div>
               <div>
                 <label>Học phí / buổi (VNĐ) <span style="color:var(--accent);">*</span></label>
-                <input type="text" id="editStudentPrice" class="mono" value="${s.price_per_session}" required autocomplete="off">
+                <input type="text" id="editStudentPrice" class="mono" value="${s.price_per_session}" required autocomplete="off" inputmode="numeric" oninput="this.value=this.value.replace(/[^\d]/g,'')">
               </div>
             </div>
 
@@ -5682,7 +5682,7 @@ async function exportStudentPDF(studentId) {
 
     const datedNotes = parseStudentDatedNotes(student.notes);
 
-    /* -- Build session rows -- */
+    /* -- Build session rows (no fee column) -- */
     let sessionRows = '';
     studentSessions.forEach((sess, idx) => {
       const rec = sess.studentRecord;
@@ -5690,12 +5690,10 @@ async function exportStudentPDF(studentId) {
       const statusColor = isPresent ? '#2F6E4F' : '#C0392B';
       const statusText = isPresent ? '✅ Có mặt' : '❌ Vắng';
       const noteText = rec && rec.note ? rec.note.trim() : '';
-      const fee = isPresent ? fmtVND(student.price_per_session) : '—';
       sessionRows += `<tr style="background:${idx % 2 === 0 ? '#faf8f5' : '#ffffff'}">
         <td style="text-align:center;font-family:monospace;font-weight:600;">${fmtDateVN(sess.session_date)}</td>
         <td style="text-align:center;font-weight:700;color:${statusColor};">${statusText}</td>
         <td style="font-size:11.5px;color:#555;">${escapeHtml(noteText || '—')}</td>
-        <td style="text-align:right;font-family:monospace;font-weight:600;color:${isPresent ? '#2F6E4F' : '#888'};">${fee}</td>
       </tr>`;
     });
 
@@ -5822,7 +5820,6 @@ async function exportStudentPDF(studentId) {
         <th style="width:110px;">Ngày học</th>
         <th style="width:100px;text-align:center;">Trạng thái</th>
         <th>Ghi chú buổi</th>
-        <th style="width:120px;text-align:right;">Học phí</th>
       </tr>
     </thead>
     <tbody>${sessionRows}</tbody>
@@ -5843,7 +5840,48 @@ async function exportStudentPDF(studentId) {
   </table>` : '<p class="notes-empty">Chưa có lưu ý nào được ghi lại.</p>'}
 
   <div class="footer">Rocket Learners · Báo cáo học sinh · ${escapeHtml(student.name)} · Lớp ${escapeHtml(cls.name)} · ${now.toLocaleDateString('vi-VN')}</div>
-  <script>window.onload = function() { setTimeout(function() { window.print(); }, 400); };<\/script>
+
+  <!-- Download toolbar (hidden when printing) -->
+  <div class="no-print" style="position:fixed;bottom:24px;right:24px;display:flex;gap:10px;z-index:9999;">
+    <button onclick="window.print()" style="background:#1B365D;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,0.2);">
+      🖶️ In / Lưu PDF
+    </button>
+    <button id="btnDownloadPdf" style="background:linear-gradient(135deg,#2F6E4F,#1a4d36);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,0.25);">
+      ⬇️ Tải xuống PDF
+    </button>
+  </div>
+
+  <script>
+    document.getElementById('btnDownloadPdf').addEventListener('click', async function() {
+      const btn = this;
+      btn.textContent = '⏳ Đang tạo PDF...';
+      btn.disabled = true;
+      try {
+        if (typeof html2pdf === 'undefined') {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+          });
+        }
+        const filename = 'BaoCao_${escapeHtml(student.name).replace(/\s+/g,"_")}_${now.toLocaleDateString("vi-VN").replace(/\//g,"-")}.pdf';
+        await html2pdf().set({
+          margin: [12, 12],
+          filename: filename,
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).from(document.body).save();
+        btn.textContent = '✅ Đã tải!';
+        setTimeout(() => { btn.textContent = '⬇️ Tải xuống PDF'; btn.disabled = false; }, 2500);
+      } catch(e) {
+        btn.textContent = '⬇️ Tải xuống PDF';
+        btn.disabled = false;
+        alert('Lỗi tải PDF. Vui lòng dùng nút In / Lưu PDF.');
+      }
+    });
+  <\/script>
 </body>
 </html>`;
 
