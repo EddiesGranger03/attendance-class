@@ -4089,6 +4089,7 @@ function renderRoster(students) {
       <td class="action-cell" style="white-space:nowrap;">
         <button class="redit" data-id="${s.id}" title="Sửa / xoá học sinh">⋯</button>
         <button class="btn-export-student-pdf" data-sid="${s.id}" title="Xuất PDF học sinh này" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;margin-left:4px;transition:var(--transition);">📄</button>
+        <button class="btn-export-student-excel" data-sid="${s.id}" title="Xuất Excel (.xlsx) học sinh này" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;margin-left:4px;transition:var(--transition);">📊</button>
       </td>
     `;
 
@@ -4126,6 +4127,14 @@ function renderRoster(students) {
       pdfBtn.addEventListener('click', () => exportStudentPDF(s.id));
       pdfBtn.addEventListener('mouseenter', () => { pdfBtn.style.borderColor = '#1B365D'; pdfBtn.style.color = '#1B365D'; });
       pdfBtn.addEventListener('mouseleave', () => { pdfBtn.style.borderColor = ''; pdfBtn.style.color = ''; });
+    }
+
+    // Quick Excel export from table row
+    const xlBtn = tr.querySelector('.btn-export-student-excel');
+    if (xlBtn) {
+      xlBtn.addEventListener('click', () => exportStudentExcel(s.id));
+      xlBtn.addEventListener('mouseenter', () => { xlBtn.style.borderColor = '#217346'; xlBtn.style.color = '#217346'; });
+      xlBtn.addEventListener('mouseleave', () => { xlBtn.style.borderColor = ''; xlBtn.style.color = ''; });
     }
 
     // Edit / Delete Student Modal
@@ -4172,6 +4181,7 @@ function renderRoster(students) {
             <div class="modal-actions" style="margin-top:12px;">
               <button type="button" class="danger" id="deleteStudentBtn">🗑 Xoá</button>
               <button type="button" style="background:linear-gradient(135deg,#1B365D,#2a4f7c);color:#fff;border:none;border-radius:var(--radius-xs);padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;" id="exportStudentPdfBtn">📄 Xuất PDF</button>
+              <button type="button" style="background:linear-gradient(135deg,#217346,#1a5c38);color:#fff;border:none;border-radius:var(--radius-xs);padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;" id="exportStudentExcelBtn">📊 Xuất Excel</button>
               <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
               <button type="submit" class="confirm" id="saveStudentBtn">Lưu cập nhật</button>
             </div>
@@ -4183,6 +4193,12 @@ function renderRoster(students) {
       document.getElementById('exportStudentPdfBtn').addEventListener('click', () => {
         closeModal();
         exportStudentPDF(s.id);
+      });
+
+      // Wire Excel export button
+      document.getElementById('exportStudentExcelBtn').addEventListener('click', () => {
+        closeModal();
+        exportStudentExcel(s.id);
       });
 
       document.getElementById('editStudentPopupForm').addEventListener('submit', async (ev) => {
@@ -5858,6 +5874,122 @@ async function exportStudentPDF(studentId) {
     }
   } catch (err) {
     showToast('Lỗi khi xuất PDF học sinh: ' + (err.message || ''), 'error');
+  }
+}
+
+/* ---------------- Export data as Excel (.xlsx) for a Specific Student ---------------- */
+async function exportStudentExcel(studentId) {
+  if (!selectedClassId || !state.currentClass) return;
+  const cls = state.currentClass;
+  const student = (state.students || []).find(s => s.id === studentId);
+  if (!student) { showToast('Không tìm thấy thông tin học sinh.', 'error'); return; }
+
+  showToast(`Đang tạo file Excel cho "${student.name}"...`);
+
+  try {
+    // Load SheetJS from CDN if not loaded
+    if (typeof XLSX === 'undefined') {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    const sessions = state.sessions || await apiRequest(`/classes/${cls.id}/sessions`);
+
+    // Filter sessions for this student
+    const studentSessions = sessions
+      .map(sess => {
+        const rec = (sess.records || []).find(r => r.student_id === student.id);
+        return { ...sess, studentRecord: rec };
+      })
+      .filter(sess => sess.studentRecord !== undefined)
+      .sort((a, b) => a.session_date > b.session_date ? 1 : -1);
+
+    const presentCount = studentSessions.filter(s => s.studentRecord && s.studentRecord.is_present).length;
+    const absentCount = studentSessions.length - presentCount;
+    const totalFee = presentCount * Number(student.price_per_session || 0);
+    const datedNotes = parseStudentDatedNotes(student.notes);
+    const now = new Date();
+
+    /* ===== SHEET 1: LỊCH SỬ ĐIỂM DANH ===== */
+    // Summary info rows at the top
+    const sheet1Data = [
+      ['BÁO CÁO ĐIỂM DANH HỌC SINH', '', '', ''],
+      ['Rocket Learners — English for a Brighter Future', '', '', ''],
+      ['Ngày xuất:', now.toLocaleString('vi-VN'), '', ''],
+      ['', '', '', ''],
+      ['Họ và tên:', student.name, 'Lớp học:', cls.name],
+      ['Lớp (trường):', student.school_class || '—', 'Trường:', student.school_name || '—'],
+      ['SĐT Phụ huynh:', student.parent_phone || '—', 'Học phí/buổi:', Number(student.price_per_session || 0)],
+      ['Giáo viên:', currentUser ? currentUser.full_name : '—', '', ''],
+      ['', '', '', ''],
+      ['THỐNG KÊ', '', '', ''],
+      ['Tổng số buổi học', studentSessions.length, '', ''],
+      ['Số buổi có mặt', presentCount, '', ''],
+      ['Số buổi vắng mặt', absentCount, '', ''],
+      ['Tổng học phí đã nộp (VNĐ)', totalFee, '', ''],
+      ['', '', '', ''],
+      ['LỊCH SỬ ĐIỂM DANH', '', '', ''],
+      ['Ngày học', 'Trạng thái', 'Ghi chú buổi học', 'Học phí (VNĐ)'],
+    ];
+
+    studentSessions.forEach(sess => {
+      const rec = sess.studentRecord;
+      const isPresent = rec && rec.is_present;
+      sheet1Data.push([
+        sess.session_date,
+        isPresent ? 'Có mặt' : 'Vắng mặt',
+        (rec && rec.note) ? rec.note.trim() : '',
+        isPresent ? Number(student.price_per_session || 0) : 0,
+      ]);
+    });
+
+    const ws1 = XLSX.utils.aoa_to_sheet(sheet1Data);
+
+    // Column widths
+    ws1['!cols'] = [
+      { wch: 16 }, { wch: 28 }, { wch: 40 }, { wch: 22 }
+    ];
+
+    /* ===== SHEET 2: NHẬT KÝ GHI CHÚ ===== */
+    const sheet2Data = [
+      ['NHẬT KÝ LƯU Ý — ' + student.name, '', ''],
+      ['Lớp: ' + cls.name, '', ''],
+      ['', '', ''],
+      ['Ngày ghi chú', 'Nội dung ghi chú', 'Ghim'],
+    ];
+
+    if (datedNotes.length > 0) {
+      datedNotes.forEach(n => {
+        sheet2Data.push([
+          n.date,
+          n.text,
+          n.pinned ? 'Đã ghim ⭐' : '',
+        ]);
+      });
+    } else {
+      sheet2Data.push(['Chưa có ghi chú nào.', '', '']);
+    }
+
+    const ws2 = XLSX.utils.aoa_to_sheet(sheet2Data);
+    ws2['!cols'] = [{ wch: 16 }, { wch: 60 }, { wch: 12 }];
+
+    /* ===== WORKBOOK ===== */
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws1, 'Lịch sử điểm danh');
+    XLSX.utils.book_append_sheet(wb, ws2, 'Nhật ký ghi chú');
+
+    const safeName = (student.name || 'HocSinh').replace(/[^a-zA-Z0-9À-ỹ\s]/g, '').replace(/\s+/g, '_');
+    const dateStr = now.toLocaleDateString('vi-VN').replace(/\//g, '-');
+    XLSX.writeFile(wb, `BaoCao_${safeName}_${dateStr}.xlsx`);
+
+    showToast(`✅ Đã tải file Excel cho "${student.name}"!`);
+  } catch (err) {
+    showToast('Lỗi khi xuất Excel: ' + (err.message || ''), 'error');
   }
 }
 
