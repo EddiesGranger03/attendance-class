@@ -1077,24 +1077,75 @@
     text-transform: uppercase;
   }
   .ta-note-preview-cell {
-    max-width: 360px;
-    min-width: 200px;
+    max-width: 400px;
+    min-width: 220px;
   }
   .ta-note-preview-badge {
     background: rgba(139, 92, 246, 0.08);
     border: 1px solid rgba(139, 92, 246, 0.25);
     color: var(--text-primary);
-    padding: 6px 12px;
+    padding: 7px 12px;
     border-radius: 8px;
     font-size: 12.5px;
-    line-height: 1.4;
-    display: inline-block;
+    line-height: 1.45;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
     word-break: break-word;
+    transition: var(--transition);
+    max-width: 100%;
+    cursor: pointer;
   }
+  .ta-note-preview-badge:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: #8B5CF6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+  }
+  .ta-note-date-tag {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #8B5CF6;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ta-note-text {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  .ta-note-more-badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    background: rgba(139, 92, 246, 0.18);
+    color: #8B5CF6;
+    padding: 2px 7px;
+    border-radius: 10px;
+    width: fit-content;
+    margin-top: 2px;
+  }
+  [data-theme="light"] .ta-note-preview-badge {
+    background: #F3EEFF;
+    border-color: #D8B4FE;
+  }
+  [data-theme="light"] .ta-note-date-tag {
+    color: #7C3AED;
+  }
+  [data-theme="light"] .ta-note-more-badge {
+    background: #DDD6FE;
+    color: #6D28D9;
+  }
+
   .ta-note-preview-empty {
     color: var(--text-muted);
     font-size: 12px;
     font-style: italic;
+    cursor: pointer;
+  }
+  .ta-note-preview-empty:hover {
+    color: #8B5CF6;
+    text-decoration: underline;
   }
   .btn-ta-note-action {
     background: linear-gradient(135deg, #8B5CF6, #6366F1);
@@ -1122,7 +1173,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin: 10px 0 14px;
+    margin: 8px 0 14px;
   }
   .ta-chip-btn {
     background: var(--bg-input);
@@ -1142,26 +1193,75 @@
     background: rgba(139, 92, 246, 0.08);
     transform: translateY(-1px);
   }
-  .ta-recent-history-wrap {
-    margin-top: 14px;
-    padding: 12px 14px;
+
+  /* Dated Notes Timeline in Modal */
+  .ta-notes-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 230px;
+    overflow-y: auto;
+    padding: 4px 2px;
+    margin-top: 8px;
+  }
+  .ta-timeline-card {
     background: var(--bg-input);
     border: 1px solid var(--border);
+    border-left: 3px solid #8B5CF6;
     border-radius: var(--radius-xs);
-    max-height: 140px;
-    overflow-y: auto;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    transition: var(--transition);
   }
-  .ta-recent-item {
-    font-size: 12px;
-    padding: 5px 0;
-    border-bottom: 1px dashed var(--border);
-    color: var(--text-secondary);
+  .ta-timeline-card:hover {
+    border-color: #8B5CF6;
+    background: var(--bg-card);
+  }
+  .ta-timeline-card.att-source {
+    border-left-color: var(--accent);
+  }
+  .ta-timeline-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #8B5CF6;
+    margin-bottom: 3px;
     display: flex;
     align-items: center;
     gap: 6px;
   }
-  .ta-recent-item:last-child {
-    border-bottom: none;
+  .ta-timeline-body {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .ta-timeline-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .btn-mini-ta-action {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-mini-ta-action:hover {
+    border-color: #8B5CF6;
+    color: #8B5CF6;
+  }
+  .btn-mini-ta-action.del:hover {
+    border-color: var(--danger);
+    color: var(--danger);
   }
 
   /* Teacher Profile Dropdown Trigger */
@@ -4098,8 +4198,66 @@ function renderHistory() {
 }
 
 /* =========================================================================
-   GÓC TRỢ LÝ (Assistant View, Student Notes Hub & Preset Chips)
+   GÓC TRỢ LÝ (Assistant View, Dated Notes Hub & Timeline by Date)
    ========================================================================= */
+
+/* ---------------- Dated Notes Helper Utilities ---------------- */
+function parseStudentDatedNotes(rawNotes) {
+  if (!rawNotes || !String(rawNotes).trim()) return [];
+  const str = String(rawNotes).trim();
+
+  // Try JSON parse first
+  if (str.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(str);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter(item => item && (item.text || item.content))
+          .map(item => ({
+            date: item.date || todayStr(),
+            text: (item.text || item.content || '').trim()
+          }))
+          .sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
+      }
+    } catch (e) {
+      // Fallback to text parsing
+    }
+  }
+
+  // Check lines with [YYYY-MM-DD] or [DD/MM/YYYY]
+  const lines = str.split('\n');
+  const result = [];
+  lines.forEach(line => {
+    const l = line.trim();
+    if (!l) return;
+    const match = l.match(/^\[(.*?)\]\s*(.*)$/);
+    if (match) {
+      result.push({ date: match[1], text: match[2] });
+    } else {
+      result.push({ date: todayStr(), text: l });
+    }
+  });
+
+  return result.length > 0 ? result : [{ date: todayStr(), text: str }];
+}
+
+function serializeStudentDatedNotes(notesArray) {
+  if (!Array.isArray(notesArray) || notesArray.length === 0) return null;
+  const clean = notesArray
+    .filter(n => n && n.text && n.text.trim())
+    .map(n => ({ date: n.date || todayStr(), text: n.text.trim() }));
+  return clean.length > 0 ? JSON.stringify(clean) : null;
+}
+
+function getLatestStudentNote(rawNotes) {
+  const list = parseStudentDatedNotes(rawNotes);
+  if (list.length === 0) return null;
+  return {
+    latest: list[0],
+    totalCount: list.length,
+    all: list
+  };
+}
 
 function switchAppView(mode) {
   currentViewMode = mode;
@@ -4146,7 +4304,7 @@ function renderAssistantView() {
   const cls = state.currentClass || classes[0];
   const allStudents = state.students || [];
 
-  // Filter students based on search query
+  // Filter students based on search query (including names, tags, and dated notes)
   const query = (assistantSearchQuery || '').toLowerCase().trim();
   const students = query
     ? allStudents.filter(s => {
@@ -4154,12 +4312,17 @@ function renderAssistantView() {
         const schoolClass = (s.school_class || '').toLowerCase();
         const school = (s.school_name || '').toLowerCase();
         const phone = (s.parent_phone || '').toLowerCase();
-        const notes = (s.notes || '').toLowerCase();
-        return name.includes(query) || schoolClass.includes(query) || school.includes(query) || phone.includes(query) || notes.includes(query);
+        const notesList = parseStudentDatedNotes(s.notes);
+        const notesMatch = notesList.some(n =>
+          n.text.toLowerCase().includes(query) ||
+          n.date.includes(query) ||
+          fmtDateVN(n.date).includes(query)
+        );
+        return name.includes(query) || schoolClass.includes(query) || school.includes(query) || phone.includes(query) || notesMatch;
       })
     : allStudents;
 
-  const notesCount = allStudents.filter(s => s.notes && s.notes.trim()).length;
+  const notesCount = allStudents.filter(s => parseStudentDatedNotes(s.notes).length > 0).length;
 
   // Build class selection pills
   const classPillsHTML = classes.map(c => `
@@ -4176,7 +4339,7 @@ function renderAssistantView() {
             <span>📋</span> Góc Trợ Lý — Ghi Chú & Lưu Ý Học Sinh
           </h2>
           <div class="assistant-hero-sub">
-            Theo dõi tình hình học sinh, bài tập, học phí và lưu ý trong giờ học theo từng lớp.
+            Theo dõi tình hình học tập, ý thức, bài tập và học phí theo từng ngày của học sinh.
           </div>
         </div>
         <div class="assistant-stats-pill-wrap">
@@ -4202,7 +4365,7 @@ function renderAssistantView() {
         </div>
         <div class="assistant-search-box">
           <span class="assistant-search-icon">🔍</span>
-          <input type="text" id="assistantSearchInput" placeholder="Tìm tên, trường, SĐT, ghi chú..." value="${escapeHtml(assistantSearchQuery)}" autocomplete="off">
+          <input type="text" id="assistantSearchInput" placeholder="Tìm tên, ngày (26/08), SĐT, nội dung..." value="${escapeHtml(assistantSearchQuery)}" autocomplete="off">
         </div>
       </div>
 
@@ -4236,8 +4399,13 @@ function renderAssistantView() {
             const schoolClass = (s.school_class || '').toLowerCase();
             const school = (s.school_name || '').toLowerCase();
             const phone = (s.parent_phone || '').toLowerCase();
-            const notes = (s.notes || '').toLowerCase();
-            return name.includes(q) || schoolClass.includes(q) || school.includes(q) || phone.includes(q) || notes.includes(q);
+            const notesList = parseStudentDatedNotes(s.notes);
+            const notesMatch = notesList.some(n =>
+              n.text.toLowerCase().includes(q) ||
+              n.date.includes(q) ||
+              fmtDateVN(n.date).includes(q)
+            );
+            return name.includes(q) || schoolClass.includes(q) || school.includes(q) || phone.includes(q) || notesMatch;
           })
         : allStudents;
       renderAssistantTable(filtered, cls);
@@ -4270,9 +4438,21 @@ function renderAssistantTable(students, cls) {
     if (s.school_name) metaTags += `<span class="student-tag school">🏫 ${escapeHtml(s.school_name)}</span>`;
     if (s.parent_phone) metaTags += `<span class="student-tag phone"><a href="tel:${escapeHtml(s.parent_phone)}" style="color:inherit;text-decoration:none;">📞 PH: ${escapeHtml(s.parent_phone)}</a></span>`;
 
-    const notePreviewHTML = s.notes && s.notes.trim()
-      ? `<div class="ta-note-preview-badge">💬 ${escapeHtml(s.notes)}</div>`
-      : `<span class="ta-note-preview-empty">Chưa có ghi chú nào</span>`;
+    // Extract dated notes
+    const noteInfo = getLatestStudentNote(s.notes);
+    let notePreviewHTML = '';
+
+    if (noteInfo && noteInfo.latest) {
+      notePreviewHTML = `
+        <div class="ta-note-preview-badge" data-sid="${s.id}" title="Bấm để xem tất cả ${noteInfo.totalCount} ghi chú theo ngày của học sinh này">
+          <div class="ta-note-date-tag">📅 Ngày ${fmtDateVN(noteInfo.latest.date)}</div>
+          <div class="ta-note-text">${escapeHtml(noteInfo.latest.text)}</div>
+          ${noteInfo.totalCount > 1 ? `<div class="ta-note-more-badge">+${noteInfo.totalCount - 1} ghi chú ngày khác</div>` : ''}
+        </div>
+      `;
+    } else {
+      notePreviewHTML = `<span class="ta-note-preview-empty" data-sid="${s.id}" title="Bấm để thêm ghi chú theo ngày">Chưa có ghi chú nào · <em>+ Thêm</em></span>`;
+    }
 
     rowsHTML += `
       <tr>
@@ -4309,7 +4489,7 @@ function renderAssistantTable(students, cls) {
             <th style="width:40px;text-align:center;">STT</th>
             <th>Học sinh & Liên hệ</th>
             <th>Học phí/buổi</th>
-            <th>Lưu ý / Ghi chú của Trợ Lý</th>
+            <th>Lưu ý / Ghi chú theo Ngày</th>
             <th style="text-align:right;">Thao tác</th>
           </tr>
         </thead>
@@ -4320,51 +4500,90 @@ function renderAssistantTable(students, cls) {
     </div>
   `;
 
-  // Attach button click for each student
-  const noteBtns = container.querySelectorAll('.btn-ta-note-action');
-  noteBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const sid = btn.dataset.sid;
-      openStudentNoteModal(sid);
+  // Attach button & badge clicks for each student
+  container.querySelectorAll('.btn-ta-note-action, .ta-note-preview-badge, .ta-note-preview-empty').forEach(el => {
+    el.addEventListener('click', () => {
+      const sid = el.dataset.sid;
+      if (sid) openStudentNoteModal(sid);
     });
   });
 }
 
-/* ---------------- Student Note Modal (Góc Trợ Lý) ---------------- */
-function openStudentNoteModal(studentId) {
+/* ---------------- Student Note Modal (Góc Trợ Lý - Quản lý theo ngày) ---------------- */
+function openStudentNoteModal(studentId, targetDate = null, defaultText = null) {
   const student = (state.students || []).find(s => s.id === studentId);
   if (!student) return;
 
   const initials = (student.name || '').trim().split(' ').pop().substring(0, 2).toUpperCase() || 'HS';
+  const selectedDate = targetDate || currentDate || todayStr();
+
+  // Parse existing dated notes for this student
+  const datedNotes = parseStudentDatedNotes(student.notes);
   
-  // Extract previous attendance notes for this student across sessions
+  // Also collect attendance session notes
   const sessions = state.sessions || [];
-  const historyNotes = [];
+  const attendanceNotes = [];
   sessions.forEach(sess => {
     const rec = (sess.records || []).find(r => r.student_id === student.id);
     if (rec && rec.note && rec.note.trim()) {
-      historyNotes.push({
+      attendanceNotes.push({
         date: sess.session_date,
         is_present: rec.is_present,
-        note: rec.note
+        text: rec.note.trim(),
+        source: 'attendance'
       });
     }
   });
 
-  let historyNotesHTML = '';
-  if (historyNotes.length > 0) {
-    historyNotesHTML = `
-      <div style="font-size:11.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);font-weight:600;margin-top:14px;">
-        🕒 Lưu ý trong các buổi điểm danh gần đây (${historyNotes.length})
+  // Find if there is an existing direct note for the selectedDate
+  const currentDirectNote = defaultText !== null 
+    ? defaultText 
+    : (datedNotes.find(n => n.date === selectedDate)?.text || '');
+
+  // Build timeline cards
+  let timelineHTML = '';
+  if (datedNotes.length === 0 && attendanceNotes.length === 0) {
+    timelineHTML = `
+      <div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12.5px;background:var(--bg-input);border:1px dashed var(--border);border-radius:var(--radius-xs);">
+        Chưa có lưu ý nào được ghi lại cho học sinh này.<br>Nhập nội dung ở trên và bấm <strong>"💾 Lưu ghi chú ngày này"</strong> để tạo mới.
       </div>
-      <div class="ta-recent-history-wrap">
-        ${historyNotes.map(h => `
-          <div class="ta-recent-item">
-            <span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--text-muted);min-width:75px;">${fmtDateVN(h.date)}:</span>
-            <span class="${h.is_present ? 'hist-badge-pres' : 'hist-badge-abs'}" style="font-size:10px;padding:1px 4px;">${h.is_present ? 'Có mặt' : 'Vắng'}</span>
-            <span style="color:var(--text-primary);margin-left:4px;">${escapeHtml(h.note)}</span>
+    `;
+  } else {
+    // Render direct assistant notes
+    const directCards = datedNotes.map(n => `
+      <div class="ta-timeline-card">
+        <div>
+          <div class="ta-timeline-date">
+            <span>📅 Ngày ${fmtDateVN(n.date)}</span>
+            <span style="font-size:10px;padding:1px 5px;border-radius:10px;background:rgba(139,92,246,0.15);color:#8B5CF6;font-weight:600;">Trợ lý</span>
           </div>
-        `).join('')}
+          <div class="ta-timeline-body">${escapeHtml(n.text)}</div>
+        </div>
+        <div class="ta-timeline-actions">
+          <button type="button" class="btn-mini-ta-action" onclick="openStudentNoteModal('${student.id}', '${n.date}', ${JSON.stringify(n.text)})" title="Sửa ghi chú ngày này">✏️ Sửa</button>
+          <button type="button" class="btn-mini-ta-action del" onclick="deleteStudentDatedNote('${student.id}', '${n.date}')" title="Xoá ghi chú ngày này">🗑</button>
+        </div>
+      </div>
+    `).join('');
+
+    // Render attendance daily notes
+    const attCards = attendanceNotes.map(a => `
+      <div class="ta-timeline-card att-source">
+        <div>
+          <div class="ta-timeline-date" style="color:var(--accent);">
+            <span>📅 Ngày ${fmtDateVN(a.date)}</span>
+            <span class="${a.is_present ? 'hist-badge-pres' : 'hist-badge-abs'}" style="font-size:9.5px;padding:1px 5px;">${a.is_present ? 'Có mặt' : 'Vắng'}</span>
+            <span style="font-size:10px;color:var(--text-muted);font-weight:400;">(Điểm danh)</span>
+          </div>
+          <div class="ta-timeline-body">${escapeHtml(a.text)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    timelineHTML = `
+      <div class="ta-notes-timeline">
+        ${directCards}
+        ${attCards}
       </div>
     `;
   }
@@ -4372,6 +4591,8 @@ function openStudentNoteModal(studentId) {
   showModal(`
     <div class="modal-box modal-box-large">
       <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+      
+      <!-- Student Header -->
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-right:24px;">
         <div class="ta-student-avatar" style="width:44px;height:44px;font-size:16px;">${initials}</div>
         <div>
@@ -4382,54 +4603,71 @@ function openStudentNoteModal(studentId) {
         </div>
       </div>
 
-      <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:8px;">
-        Nhập các lưu ý quan trọng (tình hình học tập, ý thức trong giờ, tình trạng học phí, liên hệ phụ huynh):
-      </p>
-
-      <div style="margin-bottom:6px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Ghi chú / Lưu ý của Trợ Lý & Giáo Viên:</label>
+      <!-- Add / Edit Note for Date Form -->
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-xs);padding:14px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label style="font-size:12.5px;font-weight:600;color:var(--text-primary);margin:0;">📅 Ngày ghi chú:</label>
+            <input type="date" id="taNoteDateInput" value="${selectedDate}" style="padding:4px 8px;font-size:12.5px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);font-family:'IBM Plex Mono',monospace;">
+          </div>
           <span style="font-size:11px;color:var(--text-muted);">Tối đa 1000 ký tự</span>
         </div>
-        <textarea id="taNoteTextarea" class="student-note-input" rows="4" style="width:100%;height:95px;resize:vertical;font-size:13px;padding:10px;border-radius:var(--radius-xs);line-height:1.5;" placeholder="Ví dụ: Đã nộp học phí tháng này, làm bài tập đầy đủ, cần tập trung hơn trong giờ nghe...">${escapeHtml(student.notes || '')}</textarea>
+
+        <textarea id="taNoteTextarea" class="student-note-input" rows="3" style="width:100%;height:80px;resize:vertical;font-size:13px;padding:10px;border-radius:var(--radius-xs);line-height:1.5;background:var(--bg-card);" placeholder="Nhập lưu ý cho ngày này (tình hình học tập, ý thức, bài tập, học phí, liên hệ phụ huynh)...">${escapeHtml(currentDirectNote)}</textarea>
+
+        <!-- Quick Preset Tag Chips -->
+        <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-top:8px;">Gợi ý 1-chạm:</div>
+        <div class="ta-preset-chips" style="margin-bottom:10px;">
+          <button type="button" class="ta-chip-btn" onclick="appendTaNote('🌟 Hoàn thành bài tập đầy đủ')">🌟 Làm bài tập tốt</button>
+          <button type="button" class="ta-chip-btn" onclick="appendTaNote('⚠️ Chưa hoàn thành bài tập về nhà')">⚠️ Chưa làm BTVN</button>
+          <button type="button" class="ta-chip-btn" onclick="appendTaNote('💡 Tiếp thu bài rất nhanh & tích cực')">💡 Tiếp thu tốt</button>
+          <button type="button" class="ta-chip-btn" onclick="appendTaNote('📢 Cần tập trung hơn trong giờ học')">📢 Cần tập trung</button>
+          <button type="button" class="ta-chip-btn" onclick="appendTaNote('💰 Đã đóng đủ học phí')">💰 Đã nộp học phí</button>
+          <button type="button" class="ta-chip-btn" onclick="appendTaNote('⏳ Chưa đóng học phí tháng này')">⏳ Chưa nộp học phí</button>
+          <button type="button" class="ta-chip-btn" onclick="appendTaNote('⏰ Đến lớp muộn 15 phút')">⏰ Đến muộn</button>
+          <button type="button" class="ta-chip-btn" onclick="appendTaNote('📞 Cần liên hệ trao đổi với phụ huynh')">📞 Cần gọi phụ huynh</button>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button type="button" class="confirm" id="btnSaveTaNote" style="background:linear-gradient(135deg,#8B5CF6,#6366F1);font-size:12.5px;padding:7px 16px;">
+            💾 Lưu ghi chú ngày này
+          </button>
+        </div>
       </div>
 
-      <!-- Quick Preset Tag Chips -->
-      <div style="font-size:11px;color:var(--text-muted);font-weight:600;">Gợi ý 1-chạm:</div>
-      <div class="ta-preset-chips">
-        <button type="button" class="ta-chip-btn" onclick="appendTaNote('🌟 Hoàn thành bài tập đầy đủ')">🌟 Làm bài tập tốt</button>
-        <button type="button" class="ta-chip-btn" onclick="appendTaNote('⚠️ Chưa hoàn thành bài tập về nhà')">⚠️ Chưa làm BTVN</button>
-        <button type="button" class="ta-chip-btn" onclick="appendTaNote('💡 Tiếp thu bài rất nhanh & tích cực')">💡 Tiếp thu tốt</button>
-        <button type="button" class="ta-chip-btn" onclick="appendTaNote('📢 Cần tập trung hơn trong giờ học')">📢 Cần tập trung</button>
-        <button type="button" class="ta-chip-btn" onclick="appendTaNote('💰 Đã đóng đủ học phí')">💰 Đã nộp học phí</button>
-        <button type="button" class="ta-chip-btn" onclick="appendTaNote('⏳ Chưa đóng học phí tháng này')">⏳ Chưa nộp học phí</button>
-        <button type="button" class="ta-chip-btn" onclick="appendTaNote('⏰ Đến lớp muộn 15 phút')">⏰ Đến muộn</button>
-        <button type="button" class="ta-chip-btn" onclick="appendTaNote('📞 Cần liên hệ trao đổi với phụ huynh')">📞 Cần gọi phụ huynh</button>
+      <!-- Timeline of All Notes by Date -->
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);font-weight:700;">
+            🕒 Nhật ký & Lịch sử ghi chú theo ngày (${datedNotes.length + attendanceNotes.length})
+          </div>
+        </div>
+        ${timelineHTML}
       </div>
-
-      ${historyNotesHTML}
 
       <div class="modal-actions" style="margin-top:16px;">
-        <button type="button" class="danger" id="btnDeleteTaNote" style="${!student.notes ? 'display:none;' : ''}">🗑 Xoá lưu ý</button>
-        <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
-        <button type="button" class="confirm" id="btnSaveTaNote" style="background:linear-gradient(135deg,#8B5CF6,#6366F1);">💾 Lưu ghi chú</button>
+        <button type="button" class="cancel" onclick="closeModal()">Đóng</button>
       </div>
     </div>
   `);
 
-  document.getElementById('btnSaveTaNote').addEventListener('click', async () => {
-    const noteVal = document.getElementById('taNoteTextarea').value.trim();
-    await saveStudentNote(student.id, noteVal);
+  // Date input change handler: automatically switch to that date's note
+  document.getElementById('taNoteDateInput').addEventListener('change', (e) => {
+    const newDate = e.target.value;
+    const noteForNewDate = datedNotes.find(n => n.date === newDate)?.text || '';
+    document.getElementById('taNoteTextarea').value = noteForNewDate;
   });
 
-  const delBtn = document.getElementById('btnDeleteTaNote');
-  if (delBtn) {
-    delBtn.addEventListener('click', async () => {
-      if (confirm(`Bạn có chắc muốn xoá ghi chú của học sinh "${student.name}"?`)) {
-        await saveStudentNote(student.id, '');
-      }
-    });
-  }
+  // Save note button handler
+  document.getElementById('btnSaveTaNote').addEventListener('click', async () => {
+    const dateVal = document.getElementById('taNoteDateInput').value || todayStr();
+    const noteVal = document.getElementById('taNoteTextarea').value.trim();
+    if (!noteVal) {
+      showToast('Vui lòng nhập nội dung ghi chú.', 'error');
+      return;
+    }
+    await saveStudentNoteForDate(student.id, dateVal, noteVal);
+  });
 }
 
 function appendTaNote(tagText) {
@@ -4444,7 +4682,8 @@ function appendTaNote(tagText) {
   textarea.focus();
 }
 
-async function saveStudentNote(studentId, noteText) {
+/* ---------------- Save / Update / Delete Dated Notes ---------------- */
+async function saveStudentNoteForDate(studentId, dateStr, noteText) {
   const st = (state.students || []).find(s => s.id === studentId);
   const classId = (st && st.classroom_id) || selectedClassId || (state.currentClass && state.currentClass.id);
   if (!classId) {
@@ -4458,41 +4697,98 @@ async function saveStudentNote(studentId, noteText) {
     btn.textContent = 'Đang lưu...';
   }
 
+  // Parse existing list, update or prepend date entry
+  const list = parseStudentDatedNotes(st ? st.notes : null);
+  const existingIdx = list.findIndex(n => n.date === dateStr);
+  if (existingIdx >= 0) {
+    list[existingIdx].text = noteText.trim();
+  } else {
+    list.unshift({ date: dateStr, text: noteText.trim() });
+  }
+
+  // Sort descending by date
+  list.sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
+
+  const serialized = serializeStudentDatedNotes(list);
+
   try {
     let updated;
     try {
       updated = await apiRequest(`/classes/${classId}/students/${studentId}/notes`, {
         method: 'PUT',
-        body: JSON.stringify({ notes: noteText || null })
+        body: JSON.stringify({ notes: serialized })
       });
     } catch (routeErr) {
-      // Fallback directly to student update endpoint
       updated = await apiRequest(`/classes/${classId}/students/${studentId}`, {
         method: 'PUT',
-        body: JSON.stringify({ notes: noteText || null })
+        body: JSON.stringify({ notes: serialized })
       });
     }
 
-    // Update in local state
     if (st) {
-      st.notes = updated.notes || null;
+      st.notes = updated.notes || serialized;
     }
 
-    closeModal();
-    showToast(`Đã lưu ghi chú cho học sinh "${st ? st.name : ''}"`);
+    showToast(`Đã lưu ghi chú ngày ${fmtDateVN(dateStr)} cho học sinh "${st ? st.name : ''}"`);
     
+    // Refresh modal timeline view & background table
+    openStudentNoteModal(studentId, dateStr);
+
     if (currentViewMode === 'assistant') {
       renderAssistantView();
     } else {
       renderMain();
     }
   } catch (err) {
-    console.error('Error saving student note:', err);
+    console.error('Error saving student note for date:', err);
     showToast(err.message || 'Lỗi khi lưu ghi chú.', 'error');
     if (btn) {
       btn.disabled = false;
-      btn.textContent = '💾 Lưu ghi chú';
+      btn.textContent = '💾 Lưu ghi chú ngày này';
     }
+  }
+}
+
+async function deleteStudentDatedNote(studentId, dateStr) {
+  const st = (state.students || []).find(s => s.id === studentId);
+  const classId = (st && st.classroom_id) || selectedClassId || (state.currentClass && state.currentClass.id);
+  if (!classId) return;
+
+  if (!confirm(`Bạn có chắc muốn xoá ghi chú ngày ${fmtDateVN(dateStr)} của học sinh "${st ? st.name : ''}"?`)) {
+    return;
+  }
+
+  const list = parseStudentDatedNotes(st ? st.notes : null).filter(n => n.date !== dateStr);
+  const serialized = serializeStudentDatedNotes(list);
+
+  try {
+    let updated;
+    try {
+      updated = await apiRequest(`/classes/${classId}/students/${studentId}/notes`, {
+        method: 'PUT',
+        body: JSON.stringify({ notes: serialized })
+      });
+    } catch (routeErr) {
+      updated = await apiRequest(`/classes/${classId}/students/${studentId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ notes: serialized })
+      });
+    }
+
+    if (st) {
+      st.notes = updated.notes || serialized;
+    }
+
+    showToast(`Đã xoá ghi chú ngày ${fmtDateVN(dateStr)}`);
+    openStudentNoteModal(studentId);
+
+    if (currentViewMode === 'assistant') {
+      renderAssistantView();
+    } else {
+      renderMain();
+    }
+  } catch (err) {
+    showToast(err.message || 'Lỗi khi xoá ghi chú.', 'error');
   }
 }
 
