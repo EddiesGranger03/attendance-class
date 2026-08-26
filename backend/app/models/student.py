@@ -15,6 +15,7 @@ class Student(Base):
     school_name = Column(String(255), nullable=True)
     parent_phone = Column(String(50), nullable=True)
     price_per_session = Column(Float, nullable=False, default=0.0)
+    notes = Column(String(1000), nullable=True, default=None)  # Ghi chú / Lưu ý chung của Trợ Lý & Giáo Viên
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships

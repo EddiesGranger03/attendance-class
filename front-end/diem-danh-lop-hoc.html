@@ -829,6 +829,341 @@
     box-shadow: 0 2px 10px var(--accent-glow);
   }
 
+  /* ========== VIEW MODE SWITCHER (Teacher / Assistant) ========== */
+  .topbar-center-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .app-mode-switcher {
+    display: flex;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 3px;
+    gap: 4px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  .app-mode-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    user-select: none;
+  }
+  .app-mode-btn:hover {
+    color: var(--text-primary);
+  }
+  .app-mode-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #ffffff;
+    box-shadow: 0 3px 12px var(--accent-glow);
+  }
+  .app-mode-btn.active .mode-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+  }
+  .mode-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: rgba(224, 83, 73, 0.15);
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  [data-theme="light"] .app-mode-switcher {
+    background: #EFE8DA;
+    border-color: rgba(160, 140, 120, 0.25);
+  }
+  [data-theme="light"] .app-mode-btn {
+    color: #7A6F62;
+  }
+  [data-theme="light"] .app-mode-btn.active {
+    background: linear-gradient(135deg, #E05349, #C64137);
+    color: #FFFFFF;
+    box-shadow: 0 3px 12px rgba(224, 83, 73, 0.3);
+  }
+
+  /* ========== ASSISTANT VIEW STYLES ========== */
+  .assistant-hero-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 22px;
+    animation: slideUp 0.35s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  .assistant-hero-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .assistant-hero-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+  }
+  .assistant-hero-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .assistant-stats-pill-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .assistant-stat-pill {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .assistant-stat-pill strong {
+    color: #8B5CF6;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Assistant Controls Bar: Class selection pills + Search Bar */
+  .assistant-controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .assistant-class-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .assistant-class-pill {
+    padding: 7px 15px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    transition: var(--transition);
+    font-family: 'Inter', sans-serif;
+    user-select: none;
+  }
+  .assistant-class-pill:hover {
+    border-color: #8B5CF6;
+    color: #8B5CF6;
+    transform: translateY(-1px);
+  }
+  .assistant-class-pill.active {
+    background: linear-gradient(135deg, #8B5CF6, #6366F1);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.35);
+  }
+  .assistant-search-box {
+    position: relative;
+    min-width: 240px;
+    max-width: 320px;
+    flex: 1;
+  }
+  .assistant-search-box input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+  }
+  .assistant-search-box input:focus {
+    outline: none;
+    border-color: #8B5CF6;
+    background: var(--bg-card);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+  }
+  .assistant-search-icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  /* Assistant Student Table */
+  .ta-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .ta-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .ta-table thead th {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .ta-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: var(--transition);
+    animation: slideInRight 0.3s ease both;
+  }
+  .ta-table tbody tr:last-child {
+    border-bottom: none;
+  }
+  .ta-table tbody tr:hover {
+    background: var(--glass);
+  }
+  .ta-table td {
+    padding: 13px 16px;
+    vertical-align: middle;
+  }
+  .ta-student-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8B5CF6, #06B6D4);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .ta-note-preview-cell {
+    max-width: 360px;
+    min-width: 200px;
+  }
+  .ta-note-preview-badge {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    display: inline-block;
+    word-break: break-word;
+  }
+  .ta-note-preview-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+  .btn-ta-note-action {
+    background: linear-gradient(135deg, #8B5CF6, #6366F1);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-xs);
+    padding: 8px 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-ta-note-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+  }
+
+  /* Preset Chips in TA Note Modal */
+  .ta-preset-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 14px;
+  }
+  .ta-chip-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 5px 11px;
+    border-radius: 16px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    user-select: none;
+  }
+  .ta-chip-btn:hover {
+    border-color: #8B5CF6;
+    color: #8B5CF6;
+    background: rgba(139, 92, 246, 0.08);
+    transform: translateY(-1px);
+  }
+  .ta-recent-history-wrap {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    max-height: 140px;
+    overflow-y: auto;
+  }
+  .ta-recent-item {
+    font-size: 12px;
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--border);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ta-recent-item:last-child {
+    border-bottom: none;
+  }
+
   /* Teacher Profile Dropdown Trigger */
   .teacher-profile-btn {
     background: var(--bg-input);
@@ -2343,6 +2678,19 @@
         </div>
       </div>
     </div>
+    <div class="topbar-center-nav">
+      <div class="app-mode-switcher">
+        <button type="button" class="app-mode-btn active" id="btnModeTeacher" onclick="switchAppView('teacher')" title="Màn hình Sổ Điểm Danh của Giáo Viên">
+          <span class="mode-icon">👨‍🏫</span>
+          <span class="mode-txt">Sổ Điểm Danh</span>
+        </button>
+        <button type="button" class="app-mode-btn" id="btnModeAssistant" onclick="switchAppView('assistant')" title="Màn hình Ghi Chú Học Sinh dành cho Trợ Lý">
+          <span class="mode-icon">📋</span>
+          <span class="mode-txt">Góc Trợ Lý</span>
+          <span class="mode-badge">TA</span>
+        </button>
+      </div>
+    </div>
     <div class="topbar-actions">
       <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Chuyển chế độ Sáng (Kem) / Tối">
         <span class="theme-icon">☀️</span> <span class="theme-label">Sáng</span>
@@ -2450,6 +2798,8 @@ let selectedClassId = localStorage.getItem('attendance_selected_class_id') || nu
 let currentDate = todayStr();
 let checkedIds = new Set();
 let studentNotes = {};
+let currentViewMode = localStorage.getItem('attendance_view_mode') || 'teacher';
+let assistantSearchQuery = '';
 let clockInterval = null;
 
 /* ---------------- API Helper (with Cloud Direct Fallback) ---------------- */
@@ -2731,6 +3081,19 @@ function enterApp() {
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   updateTeacherHeaderDisplay();
+
+  const btnTeacher = document.getElementById('btnModeTeacher');
+  const btnAssistant = document.getElementById('btnModeAssistant');
+  if (btnTeacher && btnAssistant) {
+    if (currentViewMode === 'assistant') {
+      btnAssistant.classList.add('active');
+      btnTeacher.classList.remove('active');
+    } else {
+      btnTeacher.classList.add('active');
+      btnAssistant.classList.remove('active');
+    }
+  }
+
   loadClasses();
 }
 
@@ -2887,7 +3250,11 @@ async function loadClasses(preferClassId = null) {
     if (selectedClassId) {
       await loadClassData(selectedClassId);
     } else {
-      renderMain();
+      if (currentViewMode === 'assistant') {
+        renderAssistantView();
+      } else {
+        renderMain();
+      }
     }
   } catch (err) {
     showToast('Lỗi khi tải danh sách lớp học từ Backend.', 'error');
@@ -2999,7 +3366,11 @@ async function loadClassData(classId) {
     checkedIds = new Set(dailyStatus.present_student_ids || []);
     studentNotes = dailyStatus.student_notes || {};
 
-    renderMain();
+    if (currentViewMode === 'assistant') {
+      renderAssistantView();
+    } else {
+      renderMain();
+    }
   } catch (err) {
     console.error('Error loading class data:', err);
     showToast('Lỗi khi tải dữ liệu chi tiết lớp học.', 'error');
@@ -3529,7 +3900,12 @@ function renderRoster(students) {
               </div>
             </div>
 
-            <div class="modal-actions" style="margin-top:10px;">
+            <div style="margin-top:10px;">
+              <label>Lưu ý / Ghi chú (Dành cho Trợ lý & Giáo viên)</label>
+              <textarea id="editStudentNotes" class="student-note-input" rows="2" style="width:100%;resize:vertical;font-size:12.5px;padding:8px;" placeholder="Ghi chú về học sinh này...">${escapeHtml(s.notes || '')}</textarea>
+            </div>
+
+            <div class="modal-actions" style="margin-top:12px;">
               <button type="button" class="danger" id="deleteStudentBtn">🗑 Xoá</button>
               <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
               <button type="submit" class="confirm" id="saveStudentBtn">Lưu cập nhật</button>
@@ -3546,6 +3922,7 @@ function renderRoster(students) {
         const newParentPhone = document.getElementById('editParentPhone').value.trim();
         const newPriceRaw = document.getElementById('editStudentPrice').value.replace(/[^\d]/g, '');
         const newPrice = Number(newPriceRaw);
+        const newNotes = document.getElementById('editStudentNotes').value.trim();
 
         if (!newName || isNaN(newPrice)) {
           showToast('Thông tin không hợp lệ.', 'error');
@@ -3568,7 +3945,8 @@ function renderRoster(students) {
               school_class: newSchoolClass || null,
               school_name: newSchoolName || null,
               parent_phone: newParentPhone || null,
-              price_per_session: newPrice
+              price_per_session: newPrice,
+              notes: newNotes || null
             })
           });
           closeModal();
@@ -3717,6 +4095,390 @@ function renderHistory() {
 
     wrap.appendChild(item);
   });
+}
+
+/* =========================================================================
+   GÓC TRỢ LÝ (Assistant View, Student Notes Hub & Preset Chips)
+   ========================================================================= */
+
+function switchAppView(mode) {
+  currentViewMode = mode;
+  localStorage.setItem('attendance_view_mode', mode);
+
+  const btnTeacher = document.getElementById('btnModeTeacher');
+  const btnAssistant = document.getElementById('btnModeAssistant');
+
+  if (btnTeacher && btnAssistant) {
+    if (mode === 'teacher') {
+      btnTeacher.classList.add('active');
+      btnAssistant.classList.remove('active');
+    } else {
+      btnAssistant.classList.add('active');
+      btnTeacher.classList.remove('active');
+    }
+  }
+
+  if (mode === 'assistant') {
+    renderAssistantView();
+  } else {
+    renderMain();
+  }
+}
+
+/* ---------------- Assistant View Render (Góc Trợ Lý) ---------------- */
+function renderAssistantView() {
+  const main = document.getElementById('mainArea');
+  if (!main) return;
+
+  if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
+
+  const classes = state.classes || [];
+  if (classes.length === 0) {
+    main.innerHTML = `
+      <div class="empty-state">
+        <div class="stamp-icon">📋</div>
+        <div class="display" style="font-size:20px;margin-bottom:8px;">Chưa có lớp học nào</div>
+        <div style="font-size:13.5px;line-height:1.6;">Vui lòng tạo lớp học mới ở thanh bên trái để bắt đầu sử dụng sổ ghi chú trợ lý.</div>
+      </div>`;
+    return;
+  }
+
+  const cls = state.currentClass || classes[0];
+  const allStudents = state.students || [];
+
+  // Filter students based on search query
+  const query = (assistantSearchQuery || '').toLowerCase().trim();
+  const students = query
+    ? allStudents.filter(s => {
+        const name = (s.name || '').toLowerCase();
+        const schoolClass = (s.school_class || '').toLowerCase();
+        const school = (s.school_name || '').toLowerCase();
+        const phone = (s.parent_phone || '').toLowerCase();
+        const notes = (s.notes || '').toLowerCase();
+        return name.includes(query) || schoolClass.includes(query) || school.includes(query) || phone.includes(query) || notes.includes(query);
+      })
+    : allStudents;
+
+  const notesCount = allStudents.filter(s => s.notes && s.notes.trim()).length;
+
+  // Build class selection pills
+  const classPillsHTML = classes.map(c => `
+    <button type="button" class="assistant-class-pill ${c.id === cls.id ? 'active' : ''}" data-cid="${c.id}">
+      📚 ${escapeHtml(c.name)} <span style="font-size:11px;opacity:0.85;">(${c.student_count || 0})</span>
+    </button>
+  `).join('');
+
+  main.innerHTML = `
+    <div class="assistant-hero-card">
+      <div class="assistant-hero-header">
+        <div>
+          <h2 class="assistant-hero-title">
+            <span>📋</span> Góc Trợ Lý — Ghi Chú & Lưu Ý Học Sinh
+          </h2>
+          <div class="assistant-hero-sub">
+            Theo dõi tình hình học sinh, bài tập, học phí và lưu ý trong giờ học theo từng lớp.
+          </div>
+        </div>
+        <div class="assistant-stats-pill-wrap">
+          <div class="assistant-stat-pill">
+            <span>Lớp đang chọn:</span>
+            <strong>${escapeHtml(cls.name)}</strong>
+          </div>
+          <div class="assistant-stat-pill">
+            <span>Sĩ số:</span>
+            <strong>${allStudents.length} học sinh</strong>
+          </div>
+          <div class="assistant-stat-pill">
+            <span>Đã có lưu ý:</span>
+            <strong>${notesCount} / ${allStudents.length}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls: Class Pills + Search -->
+      <div class="assistant-controls-bar">
+        <div class="assistant-class-tabs" id="assistantClassTabs">
+          ${classPillsHTML}
+        </div>
+        <div class="assistant-search-box">
+          <span class="assistant-search-icon">🔍</span>
+          <input type="text" id="assistantSearchInput" placeholder="Tìm tên, trường, SĐT, ghi chú..." value="${escapeHtml(assistantSearchQuery)}" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Student Table Container -->
+      <div id="assistantTableContainer"></div>
+    </div>
+  `;
+
+  // Attach event listener for class pills
+  const classPills = main.querySelectorAll('.assistant-class-pill');
+  classPills.forEach(pill => {
+    pill.addEventListener('click', async () => {
+      const cid = pill.dataset.cid;
+      if (cid === selectedClassId) return;
+      selectedClassId = cid;
+      localStorage.setItem(SELECTED_CLASS_KEY, selectedClassId);
+      renderClassList();
+      await loadClassData(selectedClassId);
+    });
+  });
+
+  // Attach search listener
+  const searchInput = document.getElementById('assistantSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      assistantSearchQuery = e.target.value;
+      const q = assistantSearchQuery.toLowerCase().trim();
+      const filtered = q
+        ? allStudents.filter(s => {
+            const name = (s.name || '').toLowerCase();
+            const schoolClass = (s.school_class || '').toLowerCase();
+            const school = (s.school_name || '').toLowerCase();
+            const phone = (s.parent_phone || '').toLowerCase();
+            const notes = (s.notes || '').toLowerCase();
+            return name.includes(q) || schoolClass.includes(q) || school.includes(q) || phone.includes(q) || notes.includes(q);
+          })
+        : allStudents;
+      renderAssistantTable(filtered, cls);
+    });
+  }
+
+  renderAssistantTable(students, cls);
+}
+
+function renderAssistantTable(students, cls) {
+  const container = document.getElementById('assistantTableContainer');
+  if (!container) return;
+
+  if (students.length === 0) {
+    container.innerHTML = `
+      <div style="padding:40px 16px;text-align:center;color:var(--text-muted);">
+        <div style="font-size:28px;margin-bottom:8px;">🔍</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text-primary);">Không tìm thấy học sinh nào</div>
+        <div style="font-size:12.5px;margin-top:4px;">Thử tìm kiếm với từ khoá khác hoặc thêm học sinh vào lớp <strong>${escapeHtml(cls.name)}</strong>.</div>
+      </div>
+    `;
+    return;
+  }
+
+  let rowsHTML = '';
+  students.forEach((s, idx) => {
+    const initials = (s.name || '').trim().split(' ').pop().substring(0, 2).toUpperCase() || 'HS';
+    let metaTags = '';
+    if (s.school_class) metaTags += `<span class="student-tag">📚 Lớp ${escapeHtml(s.school_class)}</span>`;
+    if (s.school_name) metaTags += `<span class="student-tag school">🏫 ${escapeHtml(s.school_name)}</span>`;
+    if (s.parent_phone) metaTags += `<span class="student-tag phone"><a href="tel:${escapeHtml(s.parent_phone)}" style="color:inherit;text-decoration:none;">📞 PH: ${escapeHtml(s.parent_phone)}</a></span>`;
+
+    const notePreviewHTML = s.notes && s.notes.trim()
+      ? `<div class="ta-note-preview-badge">💬 ${escapeHtml(s.notes)}</div>`
+      : `<span class="ta-note-preview-empty">Chưa có ghi chú nào</span>`;
+
+    rowsHTML += `
+      <tr>
+        <td class="stt" style="text-align:center;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);width:40px;">${idx + 1}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="ta-student-avatar">${initials}</div>
+            <div>
+              <div style="font-weight:600;font-size:14px;color:var(--text-primary);">${escapeHtml(s.name)}</div>
+              <div class="student-meta-tags">${metaTags}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--text-muted);white-space:nowrap;">
+          ${fmtVND(s.price_per_session)}
+        </td>
+        <td class="ta-note-preview-cell">
+          ${notePreviewHTML}
+        </td>
+        <td style="text-align:right;white-space:nowrap;width:120px;">
+          <button type="button" class="btn-ta-note-action" data-sid="${s.id}">
+            <span>📝</span> Ghi chú
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  container.innerHTML = `
+    <div class="ta-table-wrap">
+      <table class="ta-table">
+        <thead>
+          <tr>
+            <th style="width:40px;text-align:center;">STT</th>
+            <th>Học sinh & Liên hệ</th>
+            <th>Học phí/buổi</th>
+            <th>Lưu ý / Ghi chú của Trợ Lý</th>
+            <th style="text-align:right;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHTML}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  // Attach button click for each student
+  const noteBtns = container.querySelectorAll('.btn-ta-note-action');
+  noteBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sid = btn.dataset.sid;
+      openStudentNoteModal(sid);
+    });
+  });
+}
+
+/* ---------------- Student Note Modal (Góc Trợ Lý) ---------------- */
+function openStudentNoteModal(studentId) {
+  const student = (state.students || []).find(s => s.id === studentId);
+  if (!student) return;
+
+  const initials = (student.name || '').trim().split(' ').pop().substring(0, 2).toUpperCase() || 'HS';
+  
+  // Extract previous attendance notes for this student across sessions
+  const sessions = state.sessions || [];
+  const historyNotes = [];
+  sessions.forEach(sess => {
+    const rec = (sess.records || []).find(r => r.student_id === student.id);
+    if (rec && rec.note && rec.note.trim()) {
+      historyNotes.push({
+        date: sess.session_date,
+        is_present: rec.is_present,
+        note: rec.note
+      });
+    }
+  });
+
+  let historyNotesHTML = '';
+  if (historyNotes.length > 0) {
+    historyNotesHTML = `
+      <div style="font-size:11.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);font-weight:600;margin-top:14px;">
+        🕒 Lưu ý trong các buổi điểm danh gần đây (${historyNotes.length})
+      </div>
+      <div class="ta-recent-history-wrap">
+        ${historyNotes.map(h => `
+          <div class="ta-recent-item">
+            <span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--text-muted);min-width:75px;">${fmtDateVN(h.date)}:</span>
+            <span class="${h.is_present ? 'hist-badge-pres' : 'hist-badge-abs'}" style="font-size:10px;padding:1px 4px;">${h.is_present ? 'Có mặt' : 'Vắng'}</span>
+            <span style="color:var(--text-primary);margin-left:4px;">${escapeHtml(h.note)}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  showModal(`
+    <div class="modal-box modal-box-large">
+      <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-right:24px;">
+        <div class="ta-student-avatar" style="width:44px;height:44px;font-size:16px;">${initials}</div>
+        <div>
+          <h3 class="display" style="margin:0;font-size:18px;color:var(--text-primary);">${escapeHtml(student.name)}</h3>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+            Lớp: <strong>${escapeHtml(state.currentClass?.name || '—')}</strong> ${student.school_class ? `· Lớp ${escapeHtml(student.school_class)}` : ''} ${student.school_name ? `(${escapeHtml(student.school_name)})` : ''}
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:8px;">
+        Nhập các lưu ý quan trọng (tình hình học tập, ý thức trong giờ, tình trạng học phí, liên hệ phụ huynh):
+      </p>
+
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Ghi chú / Lưu ý của Trợ Lý & Giáo Viên:</label>
+          <span style="font-size:11px;color:var(--text-muted);">Tối đa 1000 ký tự</span>
+        </div>
+        <textarea id="taNoteTextarea" class="student-note-input" rows="4" style="width:100%;height:95px;resize:vertical;font-size:13px;padding:10px;border-radius:var(--radius-xs);line-height:1.5;" placeholder="Ví dụ: Đã nộp học phí tháng này, làm bài tập đầy đủ, cần tập trung hơn trong giờ nghe...">${escapeHtml(student.notes || '')}</textarea>
+      </div>
+
+      <!-- Quick Preset Tag Chips -->
+      <div style="font-size:11px;color:var(--text-muted);font-weight:600;">Gợi ý 1-chạm:</div>
+      <div class="ta-preset-chips">
+        <button type="button" class="ta-chip-btn" onclick="appendTaNote('🌟 Hoàn thành bài tập đầy đủ')">🌟 Làm bài tập tốt</button>
+        <button type="button" class="ta-chip-btn" onclick="appendTaNote('⚠️ Chưa hoàn thành bài tập về nhà')">⚠️ Chưa làm BTVN</button>
+        <button type="button" class="ta-chip-btn" onclick="appendTaNote('💡 Tiếp thu bài rất nhanh & tích cực')">💡 Tiếp thu tốt</button>
+        <button type="button" class="ta-chip-btn" onclick="appendTaNote('📢 Cần tập trung hơn trong giờ học')">📢 Cần tập trung</button>
+        <button type="button" class="ta-chip-btn" onclick="appendTaNote('💰 Đã đóng đủ học phí')">💰 Đã nộp học phí</button>
+        <button type="button" class="ta-chip-btn" onclick="appendTaNote('⏳ Chưa đóng học phí tháng này')">⏳ Chưa nộp học phí</button>
+        <button type="button" class="ta-chip-btn" onclick="appendTaNote('⏰ Đến lớp muộn 15 phút')">⏰ Đến muộn</button>
+        <button type="button" class="ta-chip-btn" onclick="appendTaNote('📞 Cần liên hệ trao đổi với phụ huynh')">📞 Cần gọi phụ huynh</button>
+      </div>
+
+      ${historyNotesHTML}
+
+      <div class="modal-actions" style="margin-top:16px;">
+        <button type="button" class="danger" id="btnDeleteTaNote" style="${!student.notes ? 'display:none;' : ''}">🗑 Xoá lưu ý</button>
+        <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
+        <button type="button" class="confirm" id="btnSaveTaNote" style="background:linear-gradient(135deg,#8B5CF6,#6366F1);">💾 Lưu ghi chú</button>
+      </div>
+    </div>
+  `);
+
+  document.getElementById('btnSaveTaNote').addEventListener('click', async () => {
+    const noteVal = document.getElementById('taNoteTextarea').value.trim();
+    await saveStudentNote(student.id, noteVal);
+  });
+
+  const delBtn = document.getElementById('btnDeleteTaNote');
+  if (delBtn) {
+    delBtn.addEventListener('click', async () => {
+      if (confirm(`Bạn có chắc muốn xoá ghi chú của học sinh "${student.name}"?`)) {
+        await saveStudentNote(student.id, '');
+      }
+    });
+  }
+}
+
+function appendTaNote(tagText) {
+  const textarea = document.getElementById('taNoteTextarea');
+  if (!textarea) return;
+  const current = textarea.value.trim();
+  if (current) {
+    textarea.value = current + ' · ' + tagText;
+  } else {
+    textarea.value = tagText;
+  }
+  textarea.focus();
+}
+
+async function saveStudentNote(studentId, noteText) {
+  if (!selectedClassId) return;
+  const btn = document.getElementById('btnSaveTaNote');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Đang lưu...';
+  }
+
+  try {
+    const updated = await apiRequest(`/classes/${selectedClassId}/students/${studentId}/notes`, {
+      method: 'PATCH',
+      body: JSON.stringify({ notes: noteText || null })
+    });
+
+    // Update in local state
+    const st = (state.students || []).find(s => s.id === studentId);
+    if (st) {
+      st.notes = updated.notes || null;
+    }
+
+    closeModal();
+    showToast(`Đã lưu ghi chú cho học sinh "${st ? st.name : ''}"`);
+    
+    if (currentViewMode === 'assistant') {
+      renderAssistantView();
+    } else {
+      renderMain();
+    }
+  } catch (err) {
+    showToast(err.message || 'Lỗi khi lưu ghi chú.', 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '💾 Lưu ghi chú';
+    }
+  }
 }
 
 /* =========================================================================

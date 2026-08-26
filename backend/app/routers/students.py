@@ -8,7 +8,7 @@ from app.deps import get_current_user
 from app.models.user import User
 from app.models.classroom import Classroom
 from app.models.student import Student
-from app.schemas.student import StudentCreate, StudentUpdate, StudentResponse
+from app.schemas.student import StudentCreate, StudentUpdate, StudentResponse, StudentNotesUpdate
 
 router = APIRouter(prefix="/classes/{class_id}/students", tags=["Quản lý Học sinh"])
 
@@ -72,7 +72,8 @@ def add_student(
         school_class=student_in.school_class.strip() if student_in.school_class else None,
         school_name=student_in.school_name.strip() if student_in.school_name else None,
         parent_phone=student_in.parent_phone.strip() if student_in.parent_phone else None,
-        price_per_session=float(student_in.price_per_session)
+        price_per_session=float(student_in.price_per_session),
+        notes=student_in.notes.strip() if student_in.notes else None
     )
     db.add(new_student)
     db.commit()
@@ -88,7 +89,7 @@ def update_student(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Any:
-    """Cập nhật thông tin (tên, lớp, trường, SĐT, học phí) của học sinh."""
+    """Cập nhật thông tin (tên, lớp, trường, SĐT, học phí, ghi chú) của học sinh."""
     verify_classroom_ownership(class_id, current_user.id, db)
     
     student = db.query(Student).filter(
@@ -129,7 +130,37 @@ def update_student(
         student.parent_phone = student_in.parent_phone.strip() if student_in.parent_phone else None
     if student_in.price_per_session is not None:
         student.price_per_session = float(student_in.price_per_session)
+    if student_in.notes is not None:
+        student.notes = student_in.notes.strip() if student_in.notes else None
         
+    db.commit()
+    db.refresh(student)
+    return student
+
+
+@router.patch("/{student_id}/notes", response_model=StudentResponse)
+def update_student_notes(
+    class_id: str,
+    student_id: str,
+    notes_in: StudentNotesUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """Cập nhật nhanh ghi chú / lưu ý của Trợ Lý cho học sinh."""
+    verify_classroom_ownership(class_id, current_user.id, db)
+    
+    student = db.query(Student).filter(
+        Student.id == student_id,
+        Student.classroom_id == class_id
+    ).first()
+    
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy học sinh này."
+        )
+        
+    student.notes = notes_in.notes.strip() if notes_in.notes else None
     db.commit()
     db.refresh(student)
     return student

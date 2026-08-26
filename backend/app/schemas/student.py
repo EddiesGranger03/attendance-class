@@ -9,6 +9,7 @@ class StudentCreate(BaseModel):
     school_name: Optional[str] = Field(None, max_length=255)
     parent_phone: Optional[str] = Field(None, max_length=50)
     price_per_session: float = Field(..., ge=0)
+    notes: Optional[str] = Field(None, max_length=1000)
 
 
 class StudentUpdate(BaseModel):
@@ -17,6 +18,11 @@ class StudentUpdate(BaseModel):
     school_name: Optional[str] = Field(None, max_length=255)
     parent_phone: Optional[str] = Field(None, max_length=50)
     price_per_session: Optional[float] = Field(None, ge=0)
+    notes: Optional[str] = Field(None, max_length=1000)
+
+
+class StudentNotesUpdate(BaseModel):
+    notes: Optional[str] = Field(None, max_length=1000)
 
 
 class StudentResponse(BaseModel):
@@ -27,6 +33,7 @@ class StudentResponse(BaseModel):
     school_name: Optional[str] = None
     parent_phone: Optional[str] = None
     price_per_session: float
+    notes: Optional[str] = None
     created_at: datetime
 
     class Config:
