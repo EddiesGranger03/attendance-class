@@ -138,6 +138,8 @@ def update_student(
     return student
 
 
+@router.put("/{student_id}/notes", response_model=StudentResponse)
+@router.post("/{student_id}/notes", response_model=StudentResponse)
 @router.patch("/{student_id}/notes", response_model=StudentResponse)
 def update_student_notes(
     class_id: str,

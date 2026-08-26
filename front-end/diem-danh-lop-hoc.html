@@ -4445,7 +4445,13 @@ function appendTaNote(tagText) {
 }
 
 async function saveStudentNote(studentId, noteText) {
-  if (!selectedClassId) return;
+  const st = (state.students || []).find(s => s.id === studentId);
+  const classId = (st && st.classroom_id) || selectedClassId || (state.currentClass && state.currentClass.id);
+  if (!classId) {
+    showToast('Không tìm thấy lớp học của học sinh này. Vui lòng chọn lại lớp.', 'error');
+    return;
+  }
+
   const btn = document.getElementById('btnSaveTaNote');
   if (btn) {
     btn.disabled = true;
@@ -4453,13 +4459,21 @@ async function saveStudentNote(studentId, noteText) {
   }
 
   try {
-    const updated = await apiRequest(`/classes/${selectedClassId}/students/${studentId}/notes`, {
-      method: 'PATCH',
-      body: JSON.stringify({ notes: noteText || null })
-    });
+    let updated;
+    try {
+      updated = await apiRequest(`/classes/${classId}/students/${studentId}/notes`, {
+        method: 'PUT',
+        body: JSON.stringify({ notes: noteText || null })
+      });
+    } catch (routeErr) {
+      // Fallback directly to student update endpoint
+      updated = await apiRequest(`/classes/${classId}/students/${studentId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ notes: noteText || null })
+      });
+    }
 
     // Update in local state
-    const st = (state.students || []).find(s => s.id === studentId);
     if (st) {
       st.notes = updated.notes || null;
     }
@@ -4473,6 +4487,7 @@ async function saveStudentNote(studentId, noteText) {
       renderMain();
     }
   } catch (err) {
+    console.error('Error saving student note:', err);
     showToast(err.message || 'Lỗi khi lưu ghi chú.', 'error');
     if (btn) {
       btn.disabled = false;
