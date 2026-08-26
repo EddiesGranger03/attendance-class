@@ -4086,8 +4086,9 @@ function renderRoster(students) {
       <td class="note-cell">
         <input type="text" class="student-note-input" placeholder="Ghi chú (nghỉ ốm, muộn...)" value="${escapeHtml(studentNotes[s.id] || '')}" data-sid="${s.id}" autocomplete="off">
       </td>
-      <td class="action-cell">
+      <td class="action-cell" style="white-space:nowrap;">
         <button class="redit" data-id="${s.id}" title="Sửa / xoá học sinh">⋯</button>
+        <button class="btn-export-student-pdf" data-sid="${s.id}" title="Xuất PDF học sinh này" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;margin-left:4px;transition:var(--transition);">📄</button>
       </td>
     `;
 
@@ -4117,6 +4118,14 @@ function renderRoster(students) {
           delete studentNotes[s.id];
         }
       });
+    }
+
+    // Quick PDF export from table row
+    const pdfBtn = tr.querySelector('.btn-export-student-pdf');
+    if (pdfBtn) {
+      pdfBtn.addEventListener('click', () => exportStudentPDF(s.id));
+      pdfBtn.addEventListener('mouseenter', () => { pdfBtn.style.borderColor = '#1B365D'; pdfBtn.style.color = '#1B365D'; });
+      pdfBtn.addEventListener('mouseleave', () => { pdfBtn.style.borderColor = ''; pdfBtn.style.color = ''; });
     }
 
     // Edit / Delete Student Modal
@@ -4162,12 +4171,19 @@ function renderRoster(students) {
 
             <div class="modal-actions" style="margin-top:12px;">
               <button type="button" class="danger" id="deleteStudentBtn">🗑 Xoá</button>
+              <button type="button" style="background:linear-gradient(135deg,#1B365D,#2a4f7c);color:#fff;border:none;border-radius:var(--radius-xs);padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;" id="exportStudentPdfBtn">📄 Xuất PDF</button>
               <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
               <button type="submit" class="confirm" id="saveStudentBtn">Lưu cập nhật</button>
             </div>
           </form>
         </div>
       `);
+
+      // Wire PDF export button
+      document.getElementById('exportStudentPdfBtn').addEventListener('click', () => {
+        closeModal();
+        exportStudentPDF(s.id);
+      });
 
       document.getElementById('editStudentPopupForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
@@ -4213,6 +4229,7 @@ function renderRoster(students) {
           showToast(err.message || 'Cập nhật học sinh thất bại.', 'error');
         }
       });
+
 
       document.getElementById('deleteStudentBtn').addEventListener('click', () => {
         closeModal();
@@ -5633,6 +5650,212 @@ async function exportPeriodPDF(periodId) {
     });
   } catch (err) {
     showToast('Lỗi khi xuất PDF cho kỳ này.', 'error');
+  }
+}
+
+/* ---------------- Export data as PDF for a Specific Student ---------------- */
+async function exportStudentPDF(studentId) {
+  if (!selectedClassId || !state.currentClass) return;
+  const cls = state.currentClass;
+  const student = (state.students || []).find(s => s.id === studentId);
+  if (!student) { showToast('Không tìm thấy thông tin học sinh.', 'error'); return; }
+
+  showToast(`Đang tạo báo cáo PDF cho "${student.name}"...`);
+
+  try {
+    const sessions = state.sessions || await apiRequest(`/classes/${cls.id}/sessions`);
+
+    // Filter sessions and records for this student only
+    const studentSessions = sessions
+      .map(sess => {
+        const rec = (sess.records || []).find(r => r.student_id === student.id);
+        return { ...sess, studentRecord: rec };
+      })
+      .filter(sess => sess.studentRecord !== undefined)
+      .sort((a, b) => a.session_date > b.session_date ? 1 : -1);
+
+    const presentCount = studentSessions.filter(s => s.studentRecord && s.studentRecord.is_present).length;
+    const absentCount = studentSessions.length - presentCount;
+    const totalFee = studentSessions
+      .filter(s => s.studentRecord && s.studentRecord.is_present)
+      .reduce((sum, s) => sum + Number(student.price_per_session || 0), 0);
+
+    const datedNotes = parseStudentDatedNotes(student.notes);
+
+    /* -- Build session rows -- */
+    let sessionRows = '';
+    studentSessions.forEach((sess, idx) => {
+      const rec = sess.studentRecord;
+      const isPresent = rec && rec.is_present;
+      const statusColor = isPresent ? '#2F6E4F' : '#C0392B';
+      const statusText = isPresent ? '✅ Có mặt' : '❌ Vắng';
+      const noteText = rec && rec.note ? rec.note.trim() : '';
+      const fee = isPresent ? fmtVND(student.price_per_session) : '—';
+      sessionRows += `<tr style="background:${idx % 2 === 0 ? '#faf8f5' : '#ffffff'}">
+        <td style="text-align:center;font-family:monospace;font-weight:600;">${fmtDateVN(sess.session_date)}</td>
+        <td style="text-align:center;font-weight:700;color:${statusColor};">${statusText}</td>
+        <td style="font-size:11.5px;color:#555;">${escapeHtml(noteText || '—')}</td>
+        <td style="text-align:right;font-family:monospace;font-weight:600;color:${isPresent ? '#2F6E4F' : '#888'};">${fee}</td>
+      </tr>`;
+    });
+
+    /* -- Build dated notes rows -- */
+    let noteRows = '';
+    if (datedNotes.length > 0) {
+      datedNotes.forEach((n, idx) => {
+        noteRows += `<tr style="background:${idx % 2 === 0 ? '#faf8f5' : '#ffffff'}">
+          <td style="font-family:monospace;font-size:12px;font-weight:600;white-space:nowrap;">${fmtDateVN(n.date)}${n.pinned ? ' ⭐' : ''}</td>
+          <td style="font-size:12.5px;line-height:1.45;">${escapeHtml(n.text)}</td>
+        </tr>`;
+      });
+    }
+
+    const initials = (student.name || '').trim().split(' ').pop().substring(0, 2).toUpperCase() || 'HS';
+    const now = new Date();
+
+    const printHTML = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Báo Cáo Học Sinh — ${escapeHtml(student.name)}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', Arial, sans-serif; color: #1a1a2e; padding: 36px 40px; background: #fff; font-size: 13px; line-height: 1.55; }
+
+    /* Header */
+    .header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 3px solid #1B365D; margin-bottom: 22px; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-left img { width: 46px; height: 46px; object-fit: contain; }
+    .brand-name { font-size: 18px; font-weight: 800; color: #1B365D; }
+    .brand-sub { font-size: 9.5px; color: #D48806; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 1px; }
+    .header-right { text-align: right; }
+    .report-title { font-size: 15px; font-weight: 700; color: #1B365D; text-transform: uppercase; letter-spacing: 0.5px; }
+    .export-date { font-size: 11px; color: #888; font-family: 'IBM Plex Mono', monospace; margin-top: 3px; }
+
+    /* Student card */
+    .student-card { display: flex; align-items: center; gap: 16px; background: linear-gradient(135deg, #eef2ff, #f0fdf4); border: 1px solid #c7d2fe; border-radius: 10px; padding: 16px 20px; margin-bottom: 22px; }
+    .student-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #fff; font-weight: 700; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .student-info h2 { font-size: 20px; font-weight: 800; color: #1B365D; margin-bottom: 4px; }
+    .student-meta { font-size: 12px; color: #555; display: flex; gap: 16px; flex-wrap: wrap; }
+    .student-meta span { display: flex; align-items: center; gap: 4px; }
+    .class-badge { background: #1B365D; color: #fff; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+
+    /* Stat bar */
+    .stat-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+    .stat-item { background: #f9f8f6; border: 1px solid #e8e4dc; padding: 12px 14px; border-radius: 8px; text-align: center; }
+    .stat-item .lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #777; font-weight: 600; }
+    .stat-item .val { font-size: 22px; font-weight: 800; font-family: 'IBM Plex Mono', monospace; margin-top: 3px; }
+    .stat-item .val.green { color: #2F6E4F; }
+    .stat-item .val.red { color: #C0392B; }
+    .stat-item .val.blue { color: #1B365D; }
+
+    /* Section headers */
+    h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #444; margin: 22px 0 8px; border-bottom: 1.5px solid #ddd; padding-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12.5px; }
+    thead th { background: #f2ede4; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #444; border-bottom: 2px solid #ccc; font-weight: 600; }
+    tbody td { padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* Revenue box */
+    .revenue-box { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 14px 20px; background: #edf6f0; border: 2px solid #b8dfc4; border-radius: 8px; }
+    .revenue-box .lbl { font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: #444; font-weight: 700; }
+    .revenue-amount { font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 800; color: #2F6E4F; }
+
+    /* Notes section */
+    .notes-empty { color: #999; font-style: italic; font-size: 12.5px; padding: 8px 0; }
+
+    /* Footer */
+    .footer { margin-top: 30px; padding-top: 12px; border-top: 1px solid #ddd; text-align: center; font-size: 10.5px; color: #888; }
+
+    @media print { body { padding: 15px 20px; } }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <img src="../image/logo.png" alt="Logo" onerror="this.onerror=null;this.src='/image/logo.png';">
+      <div>
+        <div class="brand-name">ROCKET LEARNERS</div>
+        <div class="brand-sub">English for a Brighter Future</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="report-title">📄 Báo cáo học sinh cá nhân</div>
+      <div class="export-date">Xuất ngày: ${now.toLocaleString('vi-VN')}</div>
+    </div>
+  </div>
+
+  <!-- Student Profile Card -->
+  <div class="student-card">
+    <div class="student-avatar">${initials}</div>
+    <div class="student-info">
+      <h2>${escapeHtml(student.name)}</h2>
+      <div class="student-meta">
+        <span>🏢 Lớp học: <strong class="class-badge">${escapeHtml(cls.name)}</strong></span>
+        ${student.school_class ? `<span>📚 Lớp trường: <strong>${escapeHtml(student.school_class)}</strong></span>` : ''}
+        ${student.school_name ? `<span>🏫 ${escapeHtml(student.school_name)}</span>` : ''}
+        ${student.parent_phone ? `<span>📞 PH: <strong>${escapeHtml(student.parent_phone)}</strong></span>` : ''}
+        <span>💰 Học phí: <strong>${fmtVND(student.price_per_session)}/buổi</strong></span>
+        <span>👨‍🏫 GV: ${escapeHtml(currentUser ? currentUser.full_name : '—')}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-bar">
+    <div class="stat-item"><div class="lbl">Tổng buổi học</div><div class="val blue">${studentSessions.length}</div></div>
+    <div class="stat-item"><div class="lbl">Có mặt</div><div class="val green">${presentCount}</div></div>
+    <div class="stat-item"><div class="lbl">Vắng mặt</div><div class="val red">${absentCount}</div></div>
+    <div class="stat-item"><div class="lbl">Tổng học phí</div><div class="val green" style="font-size:15px;">${fmtVND(totalFee)}</div></div>
+  </div>
+
+  <!-- Attendance History -->
+  <h3>📊 Lịch sử điểm danh (${studentSessions.length} buổi)</h3>
+  ${studentSessions.length > 0 ? `
+  <table>
+    <thead>
+      <tr>
+        <th style="width:110px;">Ngày học</th>
+        <th style="width:100px;text-align:center;">Trạng thái</th>
+        <th>Ghi chú buổi</th>
+        <th style="width:120px;text-align:right;">Học phí</th>
+      </tr>
+    </thead>
+    <tbody>${sessionRows}</tbody>
+  </table>` : '<p class="notes-empty">Chưa có buổi điểm danh nào.</p>'}
+
+  <!-- Total fee box -->
+  <div class="revenue-box">
+    <span class="lbl">TỔNG HỌC PHÍ ĐÃ NỔP (${escapeHtml(student.name.toUpperCase())})</span>
+    <span class="revenue-amount">${fmtVND(totalFee)}</span>
+  </div>
+
+  <!-- Dated Notes -->
+  <h3>📝 Nhật ký lưu ý (${datedNotes.length} ghi chú)</h3>
+  ${datedNotes.length > 0 ? `
+  <table>
+    <thead><tr><th style="width:130px;">Ngày</th><th>Nội dung</th></tr></thead>
+    <tbody>${noteRows}</tbody>
+  </table>` : '<p class="notes-empty">Chưa có lưu ý nào được ghi lại.</p>'}
+
+  <div class="footer">Rocket Learners · Báo cáo học sinh · ${escapeHtml(student.name)} · Lớp ${escapeHtml(cls.name)} · ${now.toLocaleDateString('vi-VN')}</div>
+  <script>window.onload = function() { setTimeout(function() { window.print(); }, 400); };<\/script>
+</body>
+</html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printHTML);
+      printWindow.document.close();
+    } else {
+      showToast('Trình duyệt đã chặn popup. Vui lòng cho phép mở popup.', 'error');
+    }
+  } catch (err) {
+    showToast('Lỗi khi xuất PDF học sinh: ' + (err.message || ''), 'error');
   }
 }
 
