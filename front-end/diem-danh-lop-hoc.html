@@ -5884,6 +5884,21 @@ async function exportStudentPDF(studentId) {
   }
 }
 
+/* ---------------- Helper: Load xlsx-js-style for formatted Excel export ---------------- */
+async function ensureXLSXStyle() {
+  if (window.XLSX && window.XLSX.__styled__) return window.XLSX;
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
+    script.onload = () => {
+      if (window.XLSX) window.XLSX.__styled__ = true;
+      resolve(window.XLSX);
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
 /* ---------------- Export data as Excel (.xlsx) for a Specific Student ---------------- */
 async function exportStudentExcel(studentId) {
   if (!selectedClassId || !state.currentClass) return;
@@ -5894,17 +5909,7 @@ async function exportStudentExcel(studentId) {
   showToast(`Đang tạo file Excel cho "${student.name}"...`);
 
   try {
-    // Load SheetJS from CDN if not loaded
-    if (typeof XLSX === 'undefined') {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    }
-
+    const XLSXLib = await ensureXLSXStyle();
     const sessions = state.sessions || await apiRequest(`/classes/${cls.id}/sessions`);
 
     // Filter sessions for this student
@@ -5922,8 +5927,14 @@ async function exportStudentExcel(studentId) {
     const datedNotes = parseStudentDatedNotes(student.notes);
     const now = new Date();
 
+    const thinBorder = {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } }
+    };
+
     /* ===== SHEET 1: LỊCH SỬ ĐIỂM DANH ===== */
-    // Summary info rows at the top
     const sheet1Data = [
       ['BÁO CÁO ĐIỂM DANH HỌC SINH', '', '', ''],
       ['Rocket Learners — English for a Brighter Future', '', '', ''],
@@ -5955,12 +5966,8 @@ async function exportStudentExcel(studentId) {
       ]);
     });
 
-    const ws1 = XLSX.utils.aoa_to_sheet(sheet1Data);
-
-    // Column widths
-    ws1['!cols'] = [
-      { wch: 16 }, { wch: 28 }, { wch: 40 }, { wch: 22 }
-    ];
+    const ws1 = XLSXLib.utils.aoa_to_sheet(sheet1Data);
+    ws1['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 40 }, { wch: 22 }];
 
     /* ===== SHEET 2: NHẬT KÝ GHI CHÚ ===== */
     const sheet2Data = [
@@ -5982,17 +5989,17 @@ async function exportStudentExcel(studentId) {
       sheet2Data.push(['Chưa có ghi chú nào.', '', '']);
     }
 
-    const ws2 = XLSX.utils.aoa_to_sheet(sheet2Data);
+    const ws2 = XLSXLib.utils.aoa_to_sheet(sheet2Data);
     ws2['!cols'] = [{ wch: 16 }, { wch: 60 }, { wch: 12 }];
 
     /* ===== WORKBOOK ===== */
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws1, 'Lịch sử điểm danh');
-    XLSX.utils.book_append_sheet(wb, ws2, 'Nhật ký ghi chú');
+    const wb = XLSXLib.utils.book_new();
+    XLSXLib.utils.book_append_sheet(wb, ws1, 'Lịch sử điểm danh');
+    XLSXLib.utils.book_append_sheet(wb, ws2, 'Nhật ký ghi chú');
 
     const safeName = (student.name || 'HocSinh').replace(/[^a-zA-Z0-9À-ỹ\s]/g, '').replace(/\s+/g, '_');
     const dateStr = now.toLocaleDateString('vi-VN').replace(/\//g, '-');
-    XLSX.writeFile(wb, `BaoCao_${safeName}_${dateStr}.xlsx`);
+    XLSXLib.writeFile(wb, `BaoCao_${safeName}_${dateStr}.xlsx`);
 
     showToast(`✅ Đã tải file Excel cho "${student.name}"!`);
   } catch (err) {
@@ -6005,24 +6012,15 @@ async function exportClassExcel() {
   if (!selectedClassId || !state.currentClass) return;
   const cls = state.currentClass;
 
-  showToast(`\u0110ang t\u1ea1o file Excel cho l\u1edbp "${cls.name}"...`);
+  showToast(`Đang tạo file Excel cho lớp "${cls.name}"...`);
 
   try {
-    // Load SheetJS
-    if (typeof XLSX === 'undefined') {
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-    }
+    const XLSXLib = await ensureXLSXStyle();
 
     const students = state.students || await apiRequest(`/classes/${cls.id}/students`);
-    const sessions  = state.sessions  || await apiRequest(`/classes/${cls.id}/sessions`);
+    const sessions = state.sessions || await apiRequest(`/classes/${cls.id}/sessions`);
 
-    if (!students.length) { showToast('L\u1edbp ch\u01b0a c\u00f3 h\u1ecdc sinh n\u00e0o.', 'error'); return; }
+    if (!students.length) { showToast('Lớp chưa có học sinh nào.', 'error'); return; }
 
     // --- Group sessions by YYYY-MM ---
     const sessionsByMonth = {};
@@ -6034,47 +6032,49 @@ async function exportClassExcel() {
     });
     const months = Object.keys(sessionsByMonth).sort();
 
-    if (!months.length) { showToast('L\u1edbp ch\u01b0a c\u00f3 bu\u1ed5i h\u1ecdc n\u00e0o.', 'error'); return; }
+    if (!months.length) { showToast('Lớp chưa có buổi học nào.', 'error'); return; }
 
-    // Period label for the merged header, e.g. "TH\u00c1NG 01 + 02/2026"
-    const monthLabels = months.map(m => {
-      const [yr, mo] = m.split('-');
-      return `T${parseInt(mo)}/${yr}`;
-    });
-    const periodHeader = `T\u1ed4NG S\u1ed0 BU\u1ed4I H\u1eccC ${monthLabels.join(' + ')}`;
+    // Period label for merged header: e.g. "TỔNG SỐ BUỔI HỌC THÁNG 01 + 02"
+    const monthNums = months.map(m => m.split('-')[1].padStart(2, '0'));
+    const periodHeader = `TỔNG SỐ BUỔI HỌC THÁNG ${monthNums.join(' + ')}`;
 
-    // Max sessions in any single month (determines how many date-columns we need)
-    const maxCols = months.reduce((mx, m) => Math.max(mx, sessionsByMonth[m].length), 0);
+    // Max sessions in any single month (determines date columns count)
+    const maxCols = Math.max(6, months.reduce((mx, m) => Math.max(mx, sessionsByMonth[m].length), 0));
 
     // Column layout:
-    // 0: STT | 1: H\u1ecd t\u00ean | 2: Th\u00e1ng label | 3..(3+maxCols-1): date slots | (3+maxCols): T\u1ed4NG
+    // 0: STT | 1: HỌ VÀ TÊN | 2: Tháng label | 3..(3+maxCols-1): date slots | (3+maxCols): TỔNG
     const TOTAL_COL = 3 + maxCols;
     const TOTAL_COLS = TOTAL_COL + 1;
 
-    const wsData  = [];
-    const merges  = [];
+    const wsData = [];
+    const merges = [];
     let row = 0;
 
+    // Build raw data array and merge regions
+    const studentBlockInfo = [];
+
     students.forEach((student, sIdx) => {
-      // ---- Header row for this student block ----
+      const headerRowIdx = row;
+
+      // Header row for this student block
       const hdr = Array(TOTAL_COLS).fill('');
       hdr[0] = 'STT';
       hdr[1] = 'HỌ VÀ TÊN';
-      hdr[2] = periodHeader;   // will be merged across cols 2..(TOTAL_COL-1)
-      hdr[TOTAL_COL] = 'T\u1ed4NG';
+      hdr[2] = periodHeader; // merged across cols 2..(TOTAL_COL-1)
+      hdr[TOTAL_COL] = 'TỔNG';
       wsData.push(hdr);
 
-      // Merge "periodHeader" across date section
+      // Merge header across date section
       merges.push({ s: { r: row, c: 2 }, e: { r: row, c: TOTAL_COL - 1 } });
       row++;
 
-      // ---- Calculate per-month attendance ----
+      // Calculate per-month attendance
       let totalPresent = 0;
       const monthRows = [];
 
       months.forEach(mKey => {
         const [yr, mo] = mKey.split('-');
-        const label = `Th\u00e1ng ${parseInt(mo)}`;
+        const label = `Tháng ${parseInt(mo)}`;
         const monthSess = sessionsByMonth[mKey];
 
         const attendedDays = monthSess
@@ -6089,19 +6089,17 @@ async function exportClassExcel() {
         monthRows.push({ label, days: attendedDays });
       });
 
-      // Only include months where student attended at least once
       const activeMonthRows = monthRows.filter(mr => mr.days.length > 0);
-      // If student never attended, show one empty row
-      const displayRows = activeMonthRows.length > 0 ? activeMonthRows : [{ label: 'Th\u00e1ng —', days: [] }];
+      const displayRows = activeMonthRows.length > 0 ? activeMonthRows : [{ label: 'Tháng —', days: [] }];
 
       const price = Number(student.price_per_session || 0);
       const totalFee = totalPresent * price;
       const priceStr = price.toLocaleString('vi-VN');
       const totalStr = totalPresent > 0
-        ? `${priceStr} \u00d7 ${totalPresent} = ${totalFee.toLocaleString('vi-VN')} \u0110`
-        : '0 \u0110';
+        ? `${priceStr} x ${totalPresent} = ${totalFee.toLocaleString('vi-VN')} Đ`
+        : '0 Đ';
 
-      const firstDataRow = row;
+      const firstDataRowIdx = row;
 
       displayRows.forEach((mr, mIdx) => {
         const dataRow = Array(TOTAL_COLS).fill('');
@@ -6116,39 +6114,132 @@ async function exportClassExcel() {
         row++;
       });
 
-      // Merge STT, name, total vertically across month rows
+      const lastDataRowIdx = row - 1;
+
+      // Merge STT, name, total vertically if multiple months
       if (displayRows.length > 1) {
-        merges.push({ s: { r: firstDataRow, c: 0 }, e: { r: row - 1, c: 0 } });
-        merges.push({ s: { r: firstDataRow, c: 1 }, e: { r: row - 1, c: 1 } });
-        merges.push({ s: { r: firstDataRow, c: TOTAL_COL }, e: { r: row - 1, c: TOTAL_COL } });
+        merges.push({ s: { r: firstDataRowIdx, c: 0 }, e: { r: lastDataRowIdx, c: 0 } });
+        merges.push({ s: { r: firstDataRowIdx, c: 1 }, e: { r: lastDataRowIdx, c: 1 } });
+        merges.push({ s: { r: firstDataRowIdx, c: TOTAL_COL }, e: { r: lastDataRowIdx, c: TOTAL_COL } });
       }
+
+      studentBlockInfo.push({
+        headerRowIdx,
+        firstDataRowIdx,
+        lastDataRowIdx,
+        displayRows
+      });
 
       // Empty separator row between students
       wsData.push(Array(TOTAL_COLS).fill(''));
       row++;
     });
 
-    // Build worksheet
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Build worksheet from AOA
+    const ws = XLSXLib.utils.aoa_to_sheet(wsData);
     ws['!merges'] = merges;
 
     // Column widths
-    const colWidths = [{ wch: 5 }, { wch: 22 }, { wch: 12 }];
-    for (let i = 0; i < maxCols; i++) colWidths.push({ wch: 6 });
+    const colWidths = [{ wch: 6 }, { wch: 22 }, { wch: 13 }];
+    for (let i = 0; i < maxCols; i++) colWidths.push({ wch: 7 });
     colWidths.push({ wch: 34 });
     ws['!cols'] = colWidths;
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, `L\u1edbp ${cls.name}`.substring(0, 31));
+    // Style Definitions
+    const thinBorder = {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } }
+    };
+
+    // 1. Header Black Bold (STT, HỌ VÀ TÊN)
+    const styleHeaderBlack = {
+      font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: '000000' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: thinBorder
+    };
+
+    // 2. Header Red Bold (TỔNG SỐ BUỔI HỌC THÁNG ..., TỔNG)
+    const styleHeaderRed = {
+      font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: 'C00000' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: thinBorder
+    };
+
+    // 3. Month label (Tháng 1, Tháng 2) -> Nền cam/vàng nhạt, bôi đậm
+    const styleMonthLabel = {
+      font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: '000000' } },
+      fill: { fgColor: { rgb: 'FCE4D6' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: thinBorder
+    };
+
+    // 4. Center data cell (STT số, Họ tên, các ngày học)
+    const styleDataCenter = {
+      font: { name: 'Times New Roman', sz: 11, bold: false, color: { rgb: '000000' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: thinBorder
+    };
+
+    // 5. Total Calculation cell (200.000 x 6 = 1.200.000 Đ -> Căn giữa)
+    const styleTotalCalc = {
+      font: { name: 'Times New Roman', sz: 11, bold: false, color: { rgb: '000000' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: thinBorder
+    };
+
+    function setCell(r, c, style) {
+      const ref = XLSXLib.utils.encode_cell({ r, c });
+      if (!ws[ref]) {
+        ws[ref] = { v: '', t: 's' };
+      }
+      ws[ref].s = style;
+    }
+
+    // Apply styles to all student blocks
+    studentBlockInfo.forEach(block => {
+      const hRow = block.headerRowIdx;
+
+      // Header STT
+      setCell(hRow, 0, styleHeaderBlack);
+      // Header HỌ VÀ TÊN
+      setCell(hRow, 1, styleHeaderBlack);
+      // Header TỔNG SỐ BUỔI HỌC (all merged cells)
+      for (let c = 2; c < TOTAL_COL; c++) {
+        setCell(hRow, c, styleHeaderRed);
+      }
+      // Header TỔNG
+      setCell(hRow, TOTAL_COL, styleHeaderRed);
+
+      // Data rows for each month
+      for (let r = block.firstDataRowIdx; r <= block.lastDataRowIdx; r++) {
+        // STT (căn giữa)
+        setCell(r, 0, styleDataCenter);
+        // HỌ VÀ TÊN (căn giữa)
+        setCell(r, 1, styleDataCenter);
+        // Tháng label (Tháng 1 / Tháng 2... bôi đậm, nền cam)
+        setCell(r, 2, styleMonthLabel);
+        // Date slots (căn giữa số ngày)
+        for (let c = 3; c < TOTAL_COL; c++) {
+          setCell(r, c, styleDataCenter);
+        }
+        // Total calculation (căn giữa)
+        setCell(r, TOTAL_COL, styleTotalCalc);
+      }
+    });
+
+    const wb = XLSXLib.utils.book_new();
+    XLSXLib.utils.book_append_sheet(wb, ws, `Lớp ${cls.name}`.substring(0, 31));
 
     const now = new Date();
     const dateStr = now.toLocaleDateString('vi-VN').replace(/\//g, '-');
     const safeCls = (cls.name || 'Lop').replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
-    XLSX.writeFile(wb, `BaoCao_Lop_${safeCls}_${dateStr}.xlsx`);
+    XLSXLib.writeFile(wb, `BaoCao_Lop_${safeCls}_${dateStr}.xlsx`);
 
-    showToast(`\u2705 \u0110\u00e3 t\u1ea3i file Excel l\u1edbp "${cls.name}"!`);
+    showToast(`✅ Đã tải file Excel lớp "${cls.name}"!`);
   } catch (err) {
-    showToast('L\u1ed7i khi xu\u1ea5t Excel l\u1edbp: ' + (err.message || ''), 'error');
+    showToast('Lỗi khi xuất Excel lớp: ' + (err.message || ''), 'error');
   }
 }
 
