@@ -1890,7 +1890,7 @@
   /* Summary strip */
   .summary-strip {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 24px;
     animation: slideInRight 0.4s ease;
@@ -2592,7 +2592,7 @@
     .summary-card .value {
       font-size: 18px;
     }
-    .summary-card:nth-child(4) {
+    .summary-card:nth-child(3) {
       grid-column: span 2;
     }
     .revenue-card-actions {
@@ -3696,9 +3696,6 @@ function renderMain() {
         <button type="button" class="btn-export-class" id="exportClassBtn" title="In & Xuất báo cáo PDF cho lớp ${escapeHtml(cls.name)}">
           📄 Xuất PDF lớp này
         </button>
-        <button type="button" class="btn-export-class" id="exportClassExcelBtn" title="Xuất báo cáo Excel (.xlsx) toàn lớp theo từng học sinh" style="background:linear-gradient(135deg,#217346,#1a5c38);color:#fff;border-color:transparent;">
-          📊 Excel cả lớp
-        </button>
       </div>
     </div>
 
@@ -3721,17 +3718,6 @@ function renderMain() {
       <div class="summary-card">
         <div class="label">TB có mặt / buổi</div>
         <div class="value">${cls.average_attendance}</div>
-      </div>
-      <div class="summary-card" style="position:relative;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="label">Doanh thu kỳ này</div>
-          <span class="active-badge">Kỳ hiện tại</span>
-        </div>
-        <div class="value money" style="margin:4px 0;">${fmtVND(activeRevenue)}</div>
-        <div class="revenue-card-actions">
-          <button type="button" class="btn-mini-settle" id="quickSettleBtn" title="Xuất PDF & Chốt kỳ doanh thu này">🔒 Chốt kỳ</button>
-          <button type="button" class="btn-mini-history" id="quickPeriodHistBtn" title="Xem lịch sử các kỳ đã chốt">📊 Lịch sử kỳ</button>
-        </div>
       </div>
     </div>
 
@@ -3780,18 +3766,8 @@ function renderMain() {
     exportCurrentClassPDF();
   });
 
-  // Export Excel Button event in class header
-  const exportClassExcelBtnEl = document.getElementById('exportClassExcelBtn');
-  if (exportClassExcelBtnEl) exportClassExcelBtnEl.addEventListener('click', () => exportClassExcel());
-
   const periodHistBtn = document.getElementById('openPeriodHistBtn');
   if (periodHistBtn) periodHistBtn.addEventListener('click', () => openPeriodHistoryModal());
-
-  const quickHistBtn = document.getElementById('quickPeriodHistBtn');
-  if (quickHistBtn) quickHistBtn.addEventListener('click', () => openPeriodHistoryModal());
-
-  const quickSettleBtn = document.getElementById('quickSettleBtn');
-  if (quickSettleBtn) quickSettleBtn.addEventListener('click', () => openSettlePeriodModal());
 
   const bannerSettleBtn = document.getElementById('bannerSettleBtn');
   if (bannerSettleBtn) bannerSettleBtn.addEventListener('click', () => openSettlePeriodModal());
@@ -4095,8 +4071,6 @@ function renderRoster(students) {
       </td>
       <td class="action-cell" style="white-space:nowrap;">
         <button class="redit" data-id="${s.id}" title="Sửa / xoá học sinh">⋯</button>
-        <button class="btn-export-student-pdf" data-sid="${s.id}" title="Xuất PDF học sinh này" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;margin-left:4px;transition:var(--transition);">📄</button>
-        <button class="btn-export-student-excel" data-sid="${s.id}" title="Xuất Excel (.xlsx) học sinh này" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;margin-left:4px;transition:var(--transition);">📊</button>
       </td>
     `;
 
@@ -4128,21 +4102,7 @@ function renderRoster(students) {
       });
     }
 
-    // Quick PDF export from table row
-    const pdfBtn = tr.querySelector('.btn-export-student-pdf');
-    if (pdfBtn) {
-      pdfBtn.addEventListener('click', () => exportStudentPDF(s.id));
-      pdfBtn.addEventListener('mouseenter', () => { pdfBtn.style.borderColor = '#1B365D'; pdfBtn.style.color = '#1B365D'; });
-      pdfBtn.addEventListener('mouseleave', () => { pdfBtn.style.borderColor = ''; pdfBtn.style.color = ''; });
-    }
 
-    // Quick Excel export from table row
-    const xlBtn = tr.querySelector('.btn-export-student-excel');
-    if (xlBtn) {
-      xlBtn.addEventListener('click', () => exportStudentExcel(s.id));
-      xlBtn.addEventListener('mouseenter', () => { xlBtn.style.borderColor = '#217346'; xlBtn.style.color = '#217346'; });
-      xlBtn.addEventListener('mouseleave', () => { xlBtn.style.borderColor = ''; xlBtn.style.color = ''; });
-    }
 
     // Edit / Delete Student Modal
     tr.querySelector('.redit').addEventListener('click', () => {
@@ -4187,26 +4147,12 @@ function renderRoster(students) {
 
             <div class="modal-actions" style="margin-top:12px;">
               <button type="button" class="danger" id="deleteStudentBtn">🗑 Xoá</button>
-              <button type="button" style="background:linear-gradient(135deg,#1B365D,#2a4f7c);color:#fff;border:none;border-radius:var(--radius-xs);padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;" id="exportStudentPdfBtn">📄 Xuất PDF</button>
-              <button type="button" style="background:linear-gradient(135deg,#217346,#1a5c38);color:#fff;border:none;border-radius:var(--radius-xs);padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;" id="exportStudentExcelBtn">📊 Xuất Excel</button>
               <button type="button" class="cancel" onclick="closeModal()">Huỷ</button>
               <button type="submit" class="confirm" id="saveStudentBtn">Lưu cập nhật</button>
             </div>
           </form>
         </div>
       `);
-
-      // Wire PDF export button
-      document.getElementById('exportStudentPdfBtn').addEventListener('click', () => {
-        closeModal();
-        exportStudentPDF(s.id);
-      });
-
-      // Wire Excel export button
-      document.getElementById('exportStudentExcelBtn').addEventListener('click', () => {
-        closeModal();
-        exportStudentExcel(s.id);
-      });
 
       document.getElementById('editStudentPopupForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
