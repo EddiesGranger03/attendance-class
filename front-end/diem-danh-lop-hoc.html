@@ -4726,25 +4726,7 @@ function renderAssistantTable(students, cls) {
     if (s.school_name) metaTags += `<span class="student-tag school">🏫 ${escapeHtml(s.school_name)}</span>`;
     if (s.parent_phone) metaTags += `<span class="student-tag phone"><a href="tel:${escapeHtml(s.parent_phone)}" style="color:inherit;text-decoration:none;">📞 PH: ${escapeHtml(s.parent_phone)}</a></span>`;
 
-    // Extract dated notes
-    const noteInfo = getLatestStudentNote(s.notes);
-    let notePreviewHTML = '';
 
-    if (noteInfo && noteInfo.latest) {
-      const pinnedCount = noteInfo.all.filter(n => n.pinned).length;
-      notePreviewHTML = `
-        <div class="ta-note-preview-badge" data-sid="${s.id}" title="Bấm để xem tất cả ${noteInfo.totalCount} ghi chú theo ngày của học sinh này">
-          <div class="ta-note-date-tag">
-            ${noteInfo.latest.pinned ? '⭐' : '📅'} Ngày ${fmtDateVN(noteInfo.latest.date)}
-            ${noteInfo.latest.pinned ? '<span class="ta-note-pinned-badge">Đã ghim</span>' : ''}
-          </div>
-          <div class="ta-note-text">${escapeHtml(noteInfo.latest.text)}</div>
-          ${noteInfo.totalCount > 1 ? `<div class="ta-note-more-badge">+${noteInfo.totalCount - 1} ghi chú ngày khác${pinnedCount > 0 ? ` · ${pinnedCount} ⭐` : ''}</div>` : ''}
-        </div>
-      `;
-    } else {
-      notePreviewHTML = `<span class="ta-note-preview-empty" data-sid="${s.id}" title="Bấm để thêm ghi chú theo ngày">Chưa có ghi chú nào · <em>+ Thêm</em></span>`;
-    }
 
     // ---- Payment state for current month ----
     const payStatus = getPaymentState(cls.id, s.id, monthKey);
@@ -4815,9 +4797,6 @@ function renderAssistantTable(students, cls) {
             </label>
           </div>
         </td>
-        <td class="ta-note-preview-cell">
-          ${notePreviewHTML}
-        </td>
       </tr>
     `;
   });
@@ -4832,7 +4811,6 @@ function renderAssistantTable(students, cls) {
             <th>Học phí/buổi</th>
             <th>Tháng</th>
             <th>Đóng tiền</th>
-            <th>Lưu ý / Ghi chú theo Ngày</th>
           </tr>
         </thead>
         <tbody>
@@ -4870,13 +4848,6 @@ function renderAssistantTable(students, cls) {
     });
   });
 
-  // Attach badge clicks for each student
-  container.querySelectorAll('.ta-note-preview-badge, .ta-note-preview-empty').forEach(el => {
-    el.addEventListener('click', () => {
-      const sid = el.dataset.sid;
-      if (sid) openStudentNoteModal(sid);
-    });
-  });
 }
 
 /* ---------------- Student Note Modal — Split-Panel Layout (Góc Trợ Lý) ---------------- */
