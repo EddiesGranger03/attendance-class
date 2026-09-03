@@ -6247,14 +6247,12 @@ async function exportStudentExcel(studentId) {
   }
 }
 
-/* ---------------- Export class-level Excel report (Sheet 1: Tuition & Payment table, Sheet 2: Attendance details) ---------------- */
-async function exportClassExcel(targetMonth = null) {
+/* ---------------- Export class-level Excel report (Format as per image: per-student blocks with attended dates, filtered by unpaid months) ---------------- */
+async function exportClassExcel() {
   if (!selectedClassId || !state.currentClass) return;
   const cls = state.currentClass;
-  const monthKey = targetMonth || currentFinanceMonth || getCurrentMonthKey();
-  const monthLabel = getMonthLabel(monthKey);
 
-  showToast(`Đang tạo file Excel theo dõi học phí cho lớp "${cls.name}" (${monthLabel})...`);
+  showToast(`Đang tạo file Excel cho lớp "${cls.name}"...`);
 
   try {
     const XLSXLib = await ensureXLSXStyle();
@@ -6264,250 +6262,7 @@ async function exportClassExcel(targetMonth = null) {
 
     if (!students.length) { showToast('Lớp chưa có học sinh nào.', 'error'); return; }
 
-    const availableMonths = getAvailableMonths(sessions);
-    const priorMonths = availableMonths.filter(m => m < monthKey);
-
-    /* ===== SHEET 1: THEO DÕI HỌC PHÍ VÀ ĐÓNG TIỀN ===== */
-    const ws1Data = [];
-    const merges1 = [];
-
-    // Title rows
-    ws1Data.push([`BẢNG THEO DÕI HỌC PHÍ & ĐÓNG TIỀN — ${cls.name.toUpperCase()}`, '', '', '', '', '', '', '', '', '']);
-    ws1Data.push([`Kỳ: ${monthLabel} | Rocket Learners — English for a Brighter Future`, '', '', '', '', '', '', '', '', '']);
-    ws1Data.push([`Ngày xuất: ${new Date().toLocaleString('vi-VN')} | Người lập: ${currentUser ? currentUser.full_name : 'Giáo viên'}`, '', '', '', '', '', '', '', '', '']);
-    ws1Data.push(['', '', '', '', '', '', '', '', '', '']);
-
-    merges1.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } });
-    merges1.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 9 } });
-    merges1.push({ s: { r: 2, c: 0 }, e: { r: 2, c: 9 } });
-
-    // Table Header
-    const headerRowIdx = 4;
-    ws1Data.push([
-      'STT',
-      'HỌ VÀ TÊN',
-      'LỚP / TRƯỜNG',
-      'SĐT PHỤ HUYNH',
-      'HỌC PHÍ/BUỔI',
-      'SỐ BUỔI HỌC',
-      'HỌC PHÍ THÁNG',
-      'NỢ CŨ THÁNG TRƯỚC',
-      'TỔNG CẦN THU',
-      'TÌNH TRẠNG'
-    ]);
-
-    let sumSessions = 0;
-    let sumCurFee = 0;
-    let sumPriorDebt = 0;
-    let sumTotalDue = 0;
-    let paidCount = 0;
-
-    const dataStartRow = 5;
-
-    students.forEach((s, idx) => {
-      const payStatus = getPaymentState(cls.id, s.id, monthKey);
-      const isPaid = payStatus === 'paid';
-      if (isPaid) paidCount++;
-      const basePrice = Number(s.price_per_session || 0);
-
-      // Current month attendance
-      const curSessions = sessions.filter(sess => sess.session_date && sess.session_date.startsWith(monthKey));
-      const curCount = curSessions.filter(sess => {
-        const rec = (sess.records || []).find(r => r.student_id === s.id);
-        return rec && rec.is_present;
-      }).length;
-      const curFee = curCount * basePrice;
-
-      // Prior unpaid debt
-      let studentPriorDebt = 0;
-      const priorDebtLabels = [];
-      priorMonths.forEach(pm => {
-        if (getPaymentState(cls.id, s.id, pm) !== 'paid') {
-          const pSess = sessions.filter(sess => sess.session_date && sess.session_date.startsWith(pm));
-          const pCount = pSess.filter(sess => {
-            const rec = (sess.records || []).find(r => r.student_id === s.id);
-            return rec && rec.is_present;
-          }).length;
-          const pDebt = pCount * basePrice;
-          if (pDebt > 0) {
-            studentPriorDebt += pDebt;
-            priorDebtLabels.push(`T${parseInt(pm.split('-')[1])}: +${pDebt.toLocaleString('vi-VN')}₫`);
-          }
-        }
-      });
-
-      const totalDue = curFee + studentPriorDebt;
-
-      sumSessions += curCount;
-      sumCurFee += curFee;
-      sumPriorDebt += studentPriorDebt;
-      sumTotalDue += totalDue;
-
-      const schoolClassInfo = [s.school_class ? `Lớp ${s.school_class}` : '', s.school_name || ''].filter(Boolean).join(' - ') || '—';
-      const priorDebtStr = priorDebtLabels.length > 0 ? priorDebtLabels.join('; ') : (studentPriorDebt > 0 ? `${studentPriorDebt.toLocaleString('vi-VN')}₫` : '0₫');
-
-      ws1Data.push([
-        idx + 1,
-        s.name,
-        schoolClassInfo,
-        s.parent_phone || '—',
-        basePrice,
-        curCount,
-        curFee,
-        studentPriorDebt > 0 ? priorDebtStr : '0₫',
-        totalDue,
-        isPaid ? 'ĐÃ ĐÓNG' : 'CHƯA ĐÓNG'
-      ]);
-    });
-
-    const dataEndRow = ws1Data.length - 1;
-
-    // Summary Row
-    const summaryRowIdx = ws1Data.length;
-    ws1Data.push([
-      'TỔNG CỘNG',
-      `${students.length} học sinh (${paidCount}/${students.length} đã đóng)`,
-      '',
-      '',
-      '',
-      sumSessions,
-      sumCurFee,
-      sumPriorDebt > 0 ? `${sumPriorDebt.toLocaleString('vi-VN')}₫` : '0₫',
-      sumTotalDue,
-      paidCount === students.length ? 'HOÀN TẤT' : `CÒN ${students.length - paidCount} CHƯA ĐÓNG`
-    ]);
-    merges1.push({ s: { r: summaryRowIdx, c: 0 }, e: { r: summaryRowIdx, c: 1 } });
-
-    // Build worksheet 1
-    const ws1 = XLSXLib.utils.aoa_to_sheet(ws1Data);
-    ws1['!merges'] = merges1;
-    ws1['!cols'] = [
-      { wch: 6 },  // STT
-      { wch: 25 }, // HỌ VÀ TÊN
-      { wch: 22 }, // LỚP / TRƯỜNG
-      { wch: 16 }, // SĐT
-      { wch: 16 }, // HỌC PHÍ/BUỔI
-      { wch: 14 }, // SỐ BUỔI
-      { wch: 18 }, // HỌC PHÍ THÁNG
-      { wch: 24 }, // NỢ CŨ
-      { wch: 20 }, // TỔNG CẦN THU
-      { wch: 18 }  // TÌNH TRẠNG
-    ];
-
-    // Styling definitions for Sheet 1
-    const thinBorder = {
-      top: { style: 'thin', color: { rgb: 'D0D7DE' } },
-      bottom: { style: 'thin', color: { rgb: 'D0D7DE' } },
-      left: { style: 'thin', color: { rgb: 'D0D7DE' } },
-      right: { style: 'thin', color: { rgb: 'D0D7DE' } }
-    };
-    const doubleBottomBorder = {
-      top: { style: 'thin', color: { rgb: '000000' } },
-      bottom: { style: 'double', color: { rgb: '000000' } },
-      left: { style: 'thin', color: { rgb: 'D0D7DE' } },
-      right: { style: 'thin', color: { rgb: 'D0D7DE' } }
-    };
-
-    // Apply styles to Sheet 1
-    const titleCell = XLSXLib.utils.encode_cell({ r: 0, c: 0 });
-    if (ws1[titleCell]) {
-      ws1[titleCell].s = {
-        font: { name: 'Times New Roman', sz: 14, bold: true, color: { rgb: '1B365D' } },
-        alignment: { horizontal: 'center', vertical: 'center' }
-      };
-    }
-    const subCell = XLSXLib.utils.encode_cell({ r: 1, c: 0 });
-    if (ws1[subCell]) {
-      ws1[subCell].s = {
-        font: { name: 'Times New Roman', sz: 11, italic: true, color: { rgb: '4A5568' } },
-        alignment: { horizontal: 'center', vertical: 'center' }
-      };
-    }
-    const metaCell = XLSXLib.utils.encode_cell({ r: 2, c: 0 });
-    if (ws1[metaCell]) {
-      ws1[metaCell].s = {
-        font: { name: 'Times New Roman', sz: 10, italic: true, color: { rgb: '718096' } },
-        alignment: { horizontal: 'center', vertical: 'center' }
-      };
-    }
-
-    // Header cells styling
-    for (let c = 0; c < 10; c++) {
-      const cellRef = XLSXLib.utils.encode_cell({ r: headerRowIdx, c });
-      if (ws1[cellRef]) {
-        ws1[cellRef].s = {
-          font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
-          fill: { fgColor: { rgb: '1F4E79' } },
-          alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-          border: thinBorder
-        };
-      }
-    }
-
-    // Data rows styling
-    for (let r = dataStartRow; r <= dataEndRow; r++) {
-      const sItem = students[r - dataStartRow];
-      const isPaid = getPaymentState(cls.id, sItem.id, monthKey) === 'paid';
-      const isAlt = (r - dataStartRow) % 2 === 1;
-      const rowBg = isAlt ? { rgb: 'F9FAFB' } : { rgb: 'FFFFFF' };
-
-      for (let c = 0; c < 10; c++) {
-        const cellRef = XLSXLib.utils.encode_cell({ r, c });
-        if (!ws1[cellRef]) continue;
-
-        let align = 'left';
-        let bold = false;
-        let color = { rgb: '000000' };
-
-        if (c === 0 || c === 2 || c === 3 || c === 5) {
-          align = 'center';
-        } else if (c === 4 || c === 6 || c === 8) {
-          align = 'right';
-        }
-
-        if (c === 1) { // Tên
-          bold = true;
-        } else if (c === 7) { // Nợ cũ
-          align = 'right';
-          const val = String(ws1[cellRef].v || '');
-          if (val && val !== '0₫') {
-            bold = true;
-            color = { rgb: 'C00000' };
-          }
-        } else if (c === 8) { // Tổng cần thu
-          bold = true;
-          color = { rgb: 'C00000' };
-        } else if (c === 9) { // Tình trạng
-          align = 'center';
-          bold = true;
-          color = isPaid ? { rgb: '1E7E34' } : { rgb: 'C00000' };
-        }
-
-        ws1[cellRef].s = {
-          font: { name: 'Times New Roman', sz: 11, bold, color },
-          fill: { fgColor: rowBg },
-          alignment: { horizontal: align, vertical: 'center' },
-          border: thinBorder
-        };
-      }
-    }
-
-    // Summary row styling
-    for (let c = 0; c < 10; c++) {
-      const cellRef = XLSXLib.utils.encode_cell({ r: summaryRowIdx, c });
-      if (!ws1[cellRef]) continue;
-      let align = 'center';
-      if (c === 4 || c === 6 || c === 7 || c === 8) align = 'right';
-
-      ws1[cellRef].s = {
-        font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: '000000' } },
-        fill: { fgColor: { rgb: 'D9E1F2' } },
-        alignment: { horizontal: align, vertical: 'center' },
-        border: doubleBottomBorder
-      };
-    }
-
-    /* ===== SHEET 2: LỊCH SỬ ĐIỂM DANH THEO TỪNG HỌC SINH (Bản chi tiết ngày học) ===== */
+    // --- Group sessions by YYYY-MM ---
     const sessionsByMonth = {};
     sessions.forEach(sess => {
       const [yr, mo] = sess.session_date.split('-');
@@ -6517,175 +6272,223 @@ async function exportClassExcel(targetMonth = null) {
     });
     const months = Object.keys(sessionsByMonth).sort();
 
-    let ws2 = null;
-    if (months.length > 0) {
-      const monthNums = months.map(m => m.split('-')[1].padStart(2, '0'));
-      const periodHeader = `TỔNG SỐ BUỔI HỌC THÁNG ${monthNums.join(' + ')}`;
-      const maxCols = Math.max(6, months.reduce((mx, m) => Math.max(mx, sessionsByMonth[m].length), 0));
-      const TOTAL_COL = 3 + maxCols;
-      const TOTAL_COLS = TOTAL_COL + 1;
+    if (!months.length) { showToast('Lớp chưa có buổi học nào.', 'error'); return; }
 
-      const ws2Data = [];
-      const merges2 = [];
-      let row2 = 0;
-      const studentBlockInfo = [];
+    // Period label for merged header: e.g. "TỔNG SỐ BUỔI HỌC THÁNG 07 + 08 + 09 + 10"
+    const monthNums = months.map(m => m.split('-')[1].padStart(2, '0'));
+    const periodHeader = `TỔNG SỐ BUỔI HỌC THÁNG ${monthNums.join(' + ')}`;
 
-      students.forEach((student, sIdx) => {
-        const headerRowIdx = row2;
-        const hdr = Array(TOTAL_COLS).fill('');
-        hdr[0] = 'STT';
-        hdr[1] = 'HỌ VÀ TÊN';
-        hdr[2] = periodHeader;
-        hdr[TOTAL_COL] = 'TỔNG';
-        ws2Data.push(hdr);
+    // Max sessions in any single month (determines date columns count)
+    const maxCols = Math.max(6, months.reduce((mx, m) => Math.max(mx, sessionsByMonth[m].length), 0));
 
-        merges2.push({ s: { r: row2, c: 2 }, e: { r: row2, c: TOTAL_COL - 1 } });
-        row2++;
+    // Column layout:
+    // 0: STT | 1: HỌ VÀ TÊN | 2: Tháng label | 3..(3+maxCols-1): date slots | (3+maxCols): TỔNG
+    const TOTAL_COL = 3 + maxCols;
+    const TOTAL_COLS = TOTAL_COL + 1;
 
-        let totalPresent = 0;
-        const monthRows = [];
+    const wsData = [];
+    const merges = [];
+    let row = 0;
+    const studentBlockInfo = [];
 
-        months.forEach(mKey => {
-          const [yr, mo] = mKey.split('-');
-          const label = `Tháng ${parseInt(mo)}`;
-          const monthSess = sessionsByMonth[mKey];
+    students.forEach((student, sIdx) => {
+      const headerRowIdx = row;
 
-          const attendedDays = monthSess
-            .filter(sess => {
-              const rec = (sess.records || []).find(r => r.student_id === student.id);
-              return rec && rec.is_present;
-            })
-            .map(sess => parseInt(sess.session_date.split('-')[2]))
-            .sort((a, b) => a - b);
+      // Header row for this student block
+      const hdr = Array(TOTAL_COLS).fill('');
+      hdr[0] = 'STT';
+      hdr[1] = 'HỌ VÀ TÊN';
+      hdr[2] = periodHeader; // merged across cols 2..(TOTAL_COL-1)
+      hdr[TOTAL_COL] = 'TỔNG';
+      wsData.push(hdr);
 
-          totalPresent += attendedDays.length;
-          monthRows.push({ label, days: attendedDays });
-        });
+      // Merge header across date section
+      merges.push({ s: { r: row, c: 2 }, e: { r: row, c: TOTAL_COL - 1 } });
+      row++;
 
-        const activeMonthRows = monthRows.filter(mr => mr.days.length > 0);
-        const displayRows = activeMonthRows.length > 0 ? activeMonthRows : [{ label: 'Tháng —', days: [] }];
+      // Filter months: ONLY months that this student has NOT paid
+      // If paid: omit that month. If unpaid: show that month and its dates
+      let totalPresent = 0;
+      const unpaidMonthRows = [];
 
-        const price = Number(student.price_per_session || 0);
-        const totalFee = totalPresent * price;
-        const priceStr = price.toLocaleString('vi-VN');
-        const totalStr = totalPresent > 0
-          ? `${priceStr} x ${totalPresent} = ${totalFee.toLocaleString('vi-VN')} Đ`
-          : '0 Đ';
-
-        const firstDataRowIdx = row2;
-
-        displayRows.forEach((mr, mIdx) => {
-          const dataRow = Array(TOTAL_COLS).fill('');
-          if (mIdx === 0) {
-            dataRow[0] = sIdx + 1;
-            dataRow[1] = student.name;
-            dataRow[TOTAL_COL] = totalStr;
-          }
-          dataRow[2] = mr.label;
-          mr.days.forEach((d, i) => { dataRow[3 + i] = d; });
-          ws2Data.push(dataRow);
-          row2++;
-        });
-
-        const lastDataRowIdx = row2 - 1;
-
-        if (displayRows.length > 1) {
-          merges2.push({ s: { r: firstDataRowIdx, c: 0 }, e: { r: lastDataRowIdx, c: 0 } });
-          merges2.push({ s: { r: firstDataRowIdx, c: 1 }, e: { r: lastDataRowIdx, c: 1 } });
-          merges2.push({ s: { r: firstDataRowIdx, c: TOTAL_COL }, e: { r: lastDataRowIdx, c: TOTAL_COL } });
+      months.forEach(mKey => {
+        const isPaid = getPaymentState(cls.id, student.id, mKey) === 'paid';
+        if (isPaid) {
+          // Student has paid this month -> omit this month
+          return;
         }
 
-        studentBlockInfo.push({
-          headerRowIdx,
-          firstDataRowIdx,
-          lastDataRowIdx,
-          displayRows
-        });
+        const [yr, mo] = mKey.split('-');
+        const label = `Tháng ${parseInt(mo)}`;
+        const monthSess = sessionsByMonth[mKey];
 
-        ws2Data.push(Array(TOTAL_COLS).fill(''));
-        row2++;
+        const attendedDays = monthSess
+          .filter(sess => {
+            const rec = (sess.records || []).find(r => r.student_id === student.id);
+            return rec && rec.is_present;
+          })
+          .map(sess => parseInt(sess.session_date.split('-')[2]))
+          .sort((a, b) => a - b);
+
+        if (attendedDays.length > 0) {
+          totalPresent += attendedDays.length;
+          unpaidMonthRows.push({ label, days: attendedDays });
+        }
       });
 
-      ws2 = XLSXLib.utils.aoa_to_sheet(ws2Data);
-      ws2['!merges'] = merges2;
+      const displayRows = unpaidMonthRows.length > 0
+        ? unpaidMonthRows
+        : [{ label: 'Đã đóng đủ', days: [] }];
 
-      const colWidths = [{ wch: 6 }, { wch: 22 }, { wch: 13 }];
-      for (let i = 0; i < maxCols; i++) colWidths.push({ wch: 7 });
-      colWidths.push({ wch: 34 });
-      ws2['!cols'] = colWidths;
+      const price = Number(student.price_per_session || 0);
+      const totalFee = totalPresent * price;
+      const priceStr = price.toLocaleString('vi-VN');
+      const totalStr = totalPresent > 0
+        ? `${priceStr} x ${totalPresent} = ${totalFee.toLocaleString('vi-VN')} Đ`
+        : '0 Đ';
 
-      const solidBorder = {
-        top: { style: 'thin', color: { rgb: '000000' } },
-        bottom: { style: 'thin', color: { rgb: '000000' } },
-        left: { style: 'thin', color: { rgb: '000000' } },
-        right: { style: 'thin', color: { rgb: '000000' } }
-      };
+      const firstDataRowIdx = row;
 
-      const styleHeaderBlack = {
-        font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: '000000' } },
-        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-        border: solidBorder
-      };
-      const styleHeaderRed = {
-        font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: 'C00000' } },
-        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-        border: solidBorder
-      };
-      const styleMonthLabel = {
-        font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: '000000' } },
-        fill: { fgColor: { rgb: 'FCE4D6' } },
-        alignment: { horizontal: 'center', vertical: 'center' },
-        border: solidBorder
-      };
-      const styleDataCenter = {
-        font: { name: 'Times New Roman', sz: 11, bold: false, color: { rgb: '000000' } },
-        alignment: { horizontal: 'center', vertical: 'center' },
-        border: solidBorder
-      };
-      const styleTotalCalc = {
-        font: { name: 'Times New Roman', sz: 11, bold: false, color: { rgb: '000000' } },
-        alignment: { horizontal: 'center', vertical: 'center' },
-        border: solidBorder
-      };
+      displayRows.forEach((mr, mIdx) => {
+        const dataRow = Array(TOTAL_COLS).fill('');
+        if (mIdx === 0) {
+          dataRow[0] = sIdx + 1;
+          dataRow[1] = student.name;
+          dataRow[TOTAL_COL] = totalStr;
+        }
+        dataRow[2] = mr.label;
+        mr.days.forEach((d, i) => { dataRow[3 + i] = d; });
+        wsData.push(dataRow);
+        row++;
+      });
 
-      function setCell2(r, c, style) {
-        const ref = XLSXLib.utils.encode_cell({ r, c });
-        if (!ws2[ref]) ws2[ref] = { v: '', t: 's' };
-        ws2[ref].s = style;
+      const lastDataRowIdx = row - 1;
+
+      // Merge STT, name, total vertically if multiple months
+      if (displayRows.length > 1) {
+        merges.push({ s: { r: firstDataRowIdx, c: 0 }, e: { r: lastDataRowIdx, c: 0 } });
+        merges.push({ s: { r: firstDataRowIdx, c: 1 }, e: { r: lastDataRowIdx, c: 1 } });
+        merges.push({ s: { r: firstDataRowIdx, c: TOTAL_COL }, e: { r: lastDataRowIdx, c: TOTAL_COL } });
       }
 
-      studentBlockInfo.forEach(block => {
-        const hRow = block.headerRowIdx;
-        setCell2(hRow, 0, styleHeaderBlack);
-        setCell2(hRow, 1, styleHeaderBlack);
-        for (let c = 2; c < TOTAL_COL; c++) setCell2(hRow, c, styleHeaderRed);
-        setCell2(hRow, TOTAL_COL, styleHeaderRed);
-
-        for (let r = block.firstDataRowIdx; r <= block.lastDataRowIdx; r++) {
-          setCell2(r, 0, styleDataCenter);
-          setCell2(r, 1, styleDataCenter);
-          setCell2(r, 2, styleMonthLabel);
-          for (let c = 3; c < TOTAL_COL; c++) setCell2(r, c, styleDataCenter);
-          setCell2(r, TOTAL_COL, styleTotalCalc);
-        }
+      studentBlockInfo.push({
+        headerRowIdx,
+        firstDataRowIdx,
+        lastDataRowIdx,
+        displayRows
       });
+
+      // Empty separator row between students
+      wsData.push(Array(TOTAL_COLS).fill(''));
+      row++;
+    });
+
+    // Build worksheet from AOA
+    const ws = XLSXLib.utils.aoa_to_sheet(wsData);
+    ws['!merges'] = merges;
+
+    // Column widths
+    const colWidths = [{ wch: 6 }, { wch: 22 }, { wch: 13 }];
+    for (let i = 0; i < maxCols; i++) colWidths.push({ wch: 7 });
+    colWidths.push({ wch: 34 });
+    ws['!cols'] = colWidths;
+
+    // Style Definitions
+    const thinBorder = {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } }
+    };
+
+    // 1. Header Black Bold (STT, HỌ VÀ TÊN)
+    const styleHeaderBlack = {
+      font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: '000000' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: thinBorder
+    };
+
+    // 2. Header Red Bold (TỔNG SỐ BUỔI HỌC THÁNG ..., TỔNG)
+    const styleHeaderRed = {
+      font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: 'C00000' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: thinBorder
+    };
+
+    // 3. Month label (Tháng 7, Tháng 8) -> Nền cam/vàng nhạt, bôi đậm
+    const styleMonthLabel = {
+      font: { name: 'Times New Roman', sz: 11, bold: true, color: { rgb: '000000' } },
+      fill: { fgColor: { rgb: 'FCE4D6' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: thinBorder
+    };
+
+    // 4. Center data cell (STT số, Họ tên, các ngày học)
+    const styleDataCenter = {
+      font: { name: 'Times New Roman', sz: 11, bold: false, color: { rgb: '000000' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: thinBorder
+    };
+
+    // 5. Total Calculation cell (54.000 x 6 = 324.000 Đ -> Căn giữa)
+    const styleTotalCalc = {
+      font: { name: 'Times New Roman', sz: 11, bold: false, color: { rgb: '000000' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: thinBorder
+    };
+
+    function setCell(r, c, style) {
+      const ref = XLSXLib.utils.encode_cell({ r, c });
+      if (!ws[ref]) {
+        ws[ref] = { v: '', t: 's' };
+      }
+      ws[ref].s = style;
     }
 
-    /* ===== WORKBOOK ===== */
+    // Apply styles to all student blocks
+    studentBlockInfo.forEach(block => {
+      const hRow = block.headerRowIdx;
+
+      // Header STT
+      setCell(hRow, 0, styleHeaderBlack);
+      // Header HỌ VÀ TÊN
+      setCell(hRow, 1, styleHeaderBlack);
+      // Header TỔNG SỐ BUỔI HỌC (all merged cells)
+      for (let c = 2; c < TOTAL_COL; c++) {
+        setCell(hRow, c, styleHeaderRed);
+      }
+      // Header TỔNG
+      setCell(hRow, TOTAL_COL, styleHeaderRed);
+
+      // Data rows for each month
+      for (let r = block.firstDataRowIdx; r <= block.lastDataRowIdx; r++) {
+        // STT (căn giữa)
+        setCell(r, 0, styleDataCenter);
+        // HỌ VÀ TÊN (căn giữa)
+        setCell(r, 1, styleDataCenter);
+        // Tháng label (Tháng 7 / Tháng 8... bôi đậm, nền cam)
+        setCell(r, 2, styleMonthLabel);
+        // Date slots (căn giữa số ngày)
+        for (let c = 3; c < TOTAL_COL; c++) {
+          setCell(r, c, styleDataCenter);
+        }
+        // Total calculation (căn giữa)
+        setCell(r, TOTAL_COL, styleTotalCalc);
+      }
+    });
+
     const wb = XLSXLib.utils.book_new();
-    XLSXLib.utils.book_append_sheet(wb, ws1, 'Học Phí & Đóng Tiền');
-    if (ws2) {
-      XLSXLib.utils.book_append_sheet(wb, ws2, 'Lịch Sử Điểm Danh');
-    }
+    XLSXLib.utils.book_append_sheet(wb, ws, `Lớp ${cls.name}`.substring(0, 31));
 
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('vi-VN').replace(/\//g, '-');
     const safeCls = (cls.name || 'Lop').replace(/[^a-zA-Z0-9À-ỹ\s]/g, '').replace(/\s+/g, '_');
-    const safeMonth = monthKey.replace('-', '_');
-    XLSXLib.writeFile(wb, `BaoCao_HocPhi_${safeCls}_${safeMonth}.xlsx`);
+    XLSXLib.writeFile(wb, `BaoCao_Lop_${safeCls}_${dateStr}.xlsx`);
 
-    showToast(`✅ Đã tải file Excel lớp "${cls.name}" (${monthLabel})!`);
+    showToast(`✅ Đã tải file Excel lớp "${cls.name}"!`);
   } catch (err) {
     console.error('Error exporting class Excel:', err);
-    showToast('Lỗi khi xuất Excel: ' + (err.message || ''), 'error');
+    showToast('Lỗi khi xuất Excel lớp: ' + (err.message || ''), 'error');
   }
 }
 
