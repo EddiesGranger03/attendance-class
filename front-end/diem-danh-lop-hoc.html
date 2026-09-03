@@ -3421,12 +3421,39 @@ function getInitials(name) {
 }
 
 /* ---------------- Teacher Profile & Personalization Modal ---------------- */
-function openTeacherProfileModal() {
+async function openTeacherProfileModal() {
   if (!currentUser) return;
 
   const totalClasses = state.classes.length;
   const totalStudents = state.classes.reduce((sum, c) => sum + (c.student_count || 0), 0);
-  const totalRevenue = state.classes.reduce((sum, c) => sum + (c.total_revenue || 0), 0);
+
+  // Calculate revenue for the current month across all classes:
+  // When a month ends, it automatically resets to 0 and calculates for the new month
+  const now = new Date();
+  const curMonthNum = now.getMonth() + 1; // e.g. 9
+  const curMonthKey = `${now.getFullYear()}-${String(curMonthNum).padStart(2, '0')}`;
+  const monthRevLabel = `Doanh thu dự kiến T${curMonthNum}`;
+
+  let monthRevenue = 0;
+  try {
+    const sessionPromises = (state.classes || []).map(async (c) => {
+      if (state.currentClass && state.currentClass.id === c.id && state.sessions) {
+        return state.sessions;
+      }
+      return await apiRequest(`/classes/${c.id}/sessions`).catch(() => []);
+    });
+    const results = await Promise.all(sessionPromises);
+    results.forEach(sessionsList => {
+      (sessionsList || []).forEach(sess => {
+        if (sess.session_date && sess.session_date.startsWith(curMonthKey)) {
+          monthRevenue += Number(sess.total_amount || 0);
+        }
+      });
+    });
+  } catch (err) {
+    console.warn('Lỗi khi tính doanh thu tháng:', err);
+  }
+
   const initials = getInitials(currentUser.full_name || 'GV');
   const joinDate = currentUser.created_at ? new Date(currentUser.created_at).toLocaleDateString('vi-VN') : 'Hôm nay';
 
@@ -3455,9 +3482,9 @@ function openTeacherProfileModal() {
           <div class="num">${totalStudents}</div>
           <div class="lbl">Học sinh</div>
         </div>
-        <div class="profile-stat-box">
-          <div class="num green" style="font-size:14px;">${fmtVND(totalRevenue)}</div>
-          <div class="lbl">Doanh thu</div>
+        <div class="profile-stat-box" title="Doanh thu tính theo các buổi học trong Tháng ${curMonthNum}/${now.getFullYear()}">
+          <div class="num green" style="font-size:13.5px;">${fmtVND(monthRevenue)}</div>
+          <div class="lbl" style="font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(monthRevLabel)}</div>
         </div>
       </div>
 
