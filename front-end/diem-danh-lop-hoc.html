@@ -3059,6 +3059,7 @@ let clockInterval = null;
 
 /* ---- Finance payment state (persisted in localStorage, no DB) ---- */
 const FIN_STORAGE_KEY = 'attendance_finance_payments';
+let currentFinanceMonth = localStorage.getItem('attendance_finance_month') || getCurrentMonthKey();
 
 function getFinKey(classId, studentId, monthKey) {
   return `${classId}__${studentId}__${monthKey}`;
@@ -3074,6 +3075,18 @@ function getPrevMonthKey() {
   d.setDate(1);
   d.setMonth(d.getMonth() - 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getAvailableMonths(sessions) {
+  const set = new Set();
+  (sessions || []).forEach(sess => {
+    if (sess.session_date) {
+      const parts = sess.session_date.split('-');
+      if (parts.length >= 2) set.add(`${parts[0]}-${parts[1]}`);
+    }
+  });
+  set.add(getCurrentMonthKey());
+  return Array.from(set).sort();
 }
 
 function getPaymentState(classId, studentId, monthKey) {
@@ -3092,6 +3105,7 @@ function setPaymentState(classId, studentId, monthKey, status) {
 }
 
 function getMonthLabel(monthKey) {
+  if (!monthKey) return '';
   const [yr, mo] = monthKey.split('-');
   return `Tháng ${parseInt(mo)}/${yr}`;
 }
@@ -4512,12 +4526,41 @@ function renderAssistantView() {
 
   const notesCount = allStudents.filter(s => parseStudentDatedNotes(s.notes).length > 0).length;
 
+  // Available months detection & validation
+  const availableMonths = getAvailableMonths(state.sessions);
+  if (!availableMonths.includes(currentFinanceMonth)) {
+    currentFinanceMonth = availableMonths[availableMonths.length - 1] || getCurrentMonthKey();
+    localStorage.setItem('attendance_finance_month', currentFinanceMonth);
+  }
+
   // Build class selection pills
   const classPillsHTML = classes.map(c => `
     <button type="button" class="assistant-class-pill ${c.id === cls.id ? 'active' : ''}" data-cid="${c.id}">
       📚 ${escapeHtml(c.name)} <span style="font-size:11px;opacity:0.85;">(${c.student_count || 0})</span>
     </button>
   `).join('');
+
+  // Build month selection pills
+  const monthPillsHTML = availableMonths.map(m => {
+    const isActive = m === currentFinanceMonth;
+    return `
+      <button type="button" class="fin-month-pill-btn ${isActive ? 'active' : ''}" data-month="${m}" style="
+        padding: 7px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        ${isActive
+          ? 'background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #ffffff; border: 1.5px solid var(--accent); box-shadow: 0 3px 10px var(--accent-glow);'
+          : 'background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border);'
+        }
+      ">
+        ${getMonthLabel(m)}
+      </button>
+    `;
+  }).join('');
 
   main.innerHTML = `
     <div class="assistant-hero-card">
@@ -4540,7 +4583,7 @@ function renderAssistantView() {
             <strong>${allStudents.length} học sinh</strong>
           </div>
           <div class="assistant-stat-pill">
-            <span>Đã đóng tiền tháng này:</span>
+            <span>Đã đóng tiền:</span>
             <strong id="finPaidCountBadge">— / ${allStudents.length}</strong>
           </div>
         </div>
@@ -4554,6 +4597,21 @@ function renderAssistantView() {
         <div class="assistant-search-box">
           <span class="assistant-search-icon">🔍</span>
           <input type="text" id="assistantSearchInput" placeholder="Tìm tên, ngày (26/08), SĐT, nội dung..." value="${escapeHtml(assistantSearchQuery)}" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Finance Month Switcher Bar -->
+      <div class="finance-month-bar" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px 14px;margin-top:12px;margin-bottom:8px;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:12.5px;font-weight:700;color:var(--text-primary);display:inline-flex;align-items:center;gap:6px;">
+            📅 Tháng đang xem:
+          </span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;" id="finMonthPillsContainer">
+            ${monthPillsHTML}
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);">
+          💡 <em>Bấm vào từng tháng để quản lý đóng học phí. Nợ tháng trước sẽ tự cộng dồn nếu chưa đóng.</em>
         </div>
       </div>
 
@@ -4575,6 +4633,18 @@ function renderAssistantView() {
       localStorage.setItem(SELECTED_CLASS_KEY, selectedClassId);
       renderClassList();
       await loadClassData(selectedClassId);
+    });
+  });
+
+  // Attach event listener for month selection pills
+  main.querySelectorAll('.fin-month-pill-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const m = btn.dataset.month;
+      if (m && m !== currentFinanceMonth) {
+        currentFinanceMonth = m;
+        localStorage.setItem('attendance_finance_month', currentFinanceMonth);
+        renderAssistantView();
+      }
     });
   });
 
@@ -4612,59 +4682,73 @@ function renderAssistantView() {
 function updateFinancePaidBadge(students, cls) {
   const badge = document.getElementById('finPaidCountBadge');
   if (!badge) return;
-  const monthKey = getCurrentMonthKey();
+  const monthKey = currentFinanceMonth;
   const paidCount = students.filter(s => getPaymentState(cls.id, s.id, monthKey) === 'paid').length;
-  badge.textContent = `${paidCount} / ${students.length}`;
-  badge.style.color = paidCount === students.length ? 'var(--success)' : 'var(--accent)';
+  badge.textContent = `${paidCount} / ${students.length} (${getMonthLabel(monthKey)})`;
+  badge.style.color = (paidCount === students.length && students.length > 0) ? 'var(--success)' : 'var(--accent)';
 }
 
 /* ---- Finance helper: render settle bar ---- */
 function renderFinanceSettleBar(students, cls) {
   const bar = document.getElementById('financeSettleBar');
   if (!bar) return;
-  const monthKey = getCurrentMonthKey();
-  const prevMonthKey = getPrevMonthKey();
-  const unpaidPrev = students.filter(s => getPaymentState(cls.id, s.id, prevMonthKey) !== 'paid');
-  const paidAll = students.every(s => getPaymentState(cls.id, s.id, monthKey) === 'paid');
+  const monthKey = currentFinanceMonth;
+  const availableMonths = getAvailableMonths(state.sessions);
+  const priorMonths = availableMonths.filter(m => m < monthKey);
 
-  // Check if last settled month matches prev month
-  const settledKey = `fin_settled__${cls.id}`;
-  const lastSettled = localStorage.getItem(settledKey) || '';
-  const prevAlreadySettled = lastSettled === prevMonthKey;
+  // Check if any student has unpaid debt in any prior month
+  const unpaidPriorStudents = [];
+  students.forEach(s => {
+    priorMonths.forEach(pm => {
+      if (getPaymentState(cls.id, s.id, pm) !== 'paid') {
+        const pSessions = (state.sessions || []).filter(sess => sess.session_date && sess.session_date.startsWith(pm));
+        const pCount = pSessions.filter(sess => {
+          const rec = (sess.records || []).find(r => r.student_id === s.id);
+          return rec && rec.is_present;
+        }).length;
+        const pDebt = pCount * Number(s.price_per_session || 0);
+        if (pDebt > 0) {
+          unpaidPriorStudents.push({ student: s, monthKey: pm, fee: pDebt });
+        }
+      }
+    });
+  });
+
+  const paidAllCurMonth = students.length > 0 && students.every(s => getPaymentState(cls.id, s.id, monthKey) === 'paid');
 
   let warningHTML = '';
-  if (!prevAlreadySettled && unpaidPrev.length > 0) {
-    const names = unpaidPrev.map(s => `<strong>${escapeHtml(s.name)}</strong>`).join(', ');
+  if (unpaidPriorStudents.length > 0) {
+    const details = unpaidPriorStudents.map(item => `<strong>${escapeHtml(item.student.name)}</strong> (${getMonthLabel(item.monthKey)}: +${item.fee.toLocaleString('vi-VN')}₫)`).join(', ');
     warningHTML = `
       <div style="width:100%;padding:10px 14px;background:rgba(255,110,108,0.1);border:1px solid rgba(255,110,108,0.35);border-radius:8px;font-size:12.5px;color:var(--text-primary);margin-bottom:6px;">
-        ⚠️ Tháng ${getMonthLabel(prevMonthKey).toLowerCase()} còn ${unpaidPrev.length} học sinh chưa đóng tiền: ${names}.
-        <br><span style="color:var(--text-muted);font-size:11.5px;">Học phí tháng trước đã được cộng dồn vào tổng tiền tháng này cho các học sinh trên.</span>
+        ⚠️ Có học sinh còn nợ học phí tháng trước: ${details}.
+        <br><span style="color:var(--text-muted);font-size:11.5px;">Tiền nợ cũ đã tự động cộng dồn vào bảng dưới đây. Nếu đã thu được, bạn chỉ cần bấm nút <em>"Đã thu nợ"</em> hoặc chuyển về tháng đó bấm <em>"Đã đóng"</em> để xóa nợ cũ.</span>
       </div>`;
   }
 
   bar.innerHTML = `
     ${warningHTML}
     <button type="button" id="btnFinanceSettle" style="
-      background: ${paidAll ? 'linear-gradient(135deg,#2F8F5E,#247A4E)' : 'var(--bg-input)'};
-      color: ${paidAll ? '#fff' : 'var(--text-muted)'};
-      border: 1px solid ${paidAll ? 'transparent' : 'var(--border)'};
+      background: ${paidAllCurMonth ? 'linear-gradient(135deg,#2F8F5E,#247A4E)' : 'var(--bg-input)'};
+      color: ${paidAllCurMonth ? '#fff' : 'var(--text-muted)'};
+      border: 1px solid ${paidAllCurMonth ? 'transparent' : 'var(--border)'};
       border-radius: var(--radius-xs); padding: 9px 18px; font-size: 13px; font-weight: 600;
-      cursor: ${paidAll ? 'pointer' : 'not-allowed'};
+      cursor: ${paidAllCurMonth ? 'pointer' : 'not-allowed'};
       font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 8px;
       transition: var(--transition);
-    " title="${paidAll ? 'Chốt kỳ tài chính tháng này' : 'Còn học sinh chưa đóng tiền'}">
+    " title="${paidAllCurMonth ? `Chốt kỳ tài chính ${getMonthLabel(monthKey)}` : 'Còn học sinh chưa đóng tiền'}">
       🔒 Chốt kỳ tài chính — ${getMonthLabel(monthKey)}
     </button>
     <div style="font-size:11.5px;color:var(--text-muted);">
-      ${paidAll
-        ? '✅ Tất cả học sinh đã đóng tiền. Bạn có thể chốt kỳ.'
-        : `⚡ Còn <strong style="color:var(--accent);">${students.filter(s => getPaymentState(cls.id, s.id, monthKey) !== 'paid').length} học sinh</strong> chưa đóng tiền.`
+      ${paidAllCurMonth
+        ? `✅ Tất cả học sinh đã đóng tiền ${getMonthLabel(monthKey)}. Bạn có thể chốt kỳ.`
+        : `⚡ Còn <strong style="color:var(--accent);">${students.filter(s => getPaymentState(cls.id, s.id, monthKey) !== 'paid').length} học sinh</strong> chưa đóng tiền ${getMonthLabel(monthKey)}.`
       }
     </div>
   `;
 
   document.getElementById('btnFinanceSettle').addEventListener('click', () => {
-    if (!paidAll) {
+    if (!paidAllCurMonth) {
       const unpaidNames = students
         .filter(s => getPaymentState(cls.id, s.id, monthKey) !== 'paid')
         .map((s, i) => `${i + 1}. ${s.name}`)
@@ -4673,9 +4757,9 @@ function renderFinanceSettleBar(students, cls) {
         <div class="modal-box">
           <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
           <h3 class="display" style="padding-right:28px;">⚠️ Chưa thể chốt kỳ</h3>
-          <p>Vẫn còn học sinh chưa đóng học phí ${getMonthLabel(monthKey).toLowerCase()}:</p>
+          <p>Vẫn còn học sinh chưa đóng học phí <strong>${getMonthLabel(monthKey)}</strong>:</p>
           <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px 16px;font-size:13px;white-space:pre-line;font-family:'IBM Plex Mono',monospace;line-height:1.8;margin-bottom:12px;">${escapeHtml(unpaidNames)}</div>
-          <p style="font-size:12.5px;color:var(--text-muted);">Hãy đánh dấu <strong>Đã đóng</strong> cho tất cả học sinh rồi thử lại.</p>
+          <p style="font-size:12.5px;color:var(--text-muted);">Hãy bấm <strong>Đã đóng ✓</strong> cho tất cả học sinh rồi thử lại.</p>
           <div class="modal-actions"><button class="cancel" onclick="closeModal()">Đóng</button></div>
         </div>`);
       return;
@@ -4684,14 +4768,14 @@ function renderFinanceSettleBar(students, cls) {
       <div class="modal-box">
         <button type="button" class="modal-close-btn" onclick="closeModal()" title="Đóng">&times;</button>
         <h3 class="display" style="padding-right:28px;">🔒 Xác nhận chốt kỳ tài chính</h3>
-        <p>Tất cả <strong>${students.length} học sinh</strong> đã đóng tiền ${getMonthLabel(monthKey).toLowerCase()}.<br>Bạn có chắc muốn chốt kỳ này không?</p>
+        <p>Tất cả <strong>${students.length} học sinh</strong> đã đóng đủ học phí <strong>${getMonthLabel(monthKey)}</strong>.<br>Bạn có chắc muốn chốt kỳ này không?</p>
         <div class="modal-actions">
           <button class="cancel" onclick="closeModal()">Huỷ</button>
           <button class="confirm" id="confirmFinanceSettle">✅ Xác nhận chốt kỳ</button>
         </div>
       </div>`);
     document.getElementById('confirmFinanceSettle').addEventListener('click', () => {
-      localStorage.setItem(`fin_settled__${cls.id}`, monthKey);
+      localStorage.setItem(`fin_settled__${cls.id}__${monthKey}`, 'true');
       closeModal();
       showToast(`✅ Đã chốt kỳ tài chính ${getMonthLabel(monthKey)} thành công!`);
       renderFinanceSettleBar(students, cls);
@@ -4714,9 +4798,10 @@ function renderAssistantTable(students, cls) {
     return;
   }
 
-  const monthKey = getCurrentMonthKey();
-  const prevMonthKey = getPrevMonthKey();
+  const monthKey = currentFinanceMonth;
   const monthLabel = getMonthLabel(monthKey);
+  const availableMonths = getAvailableMonths(state.sessions);
+  const priorMonths = availableMonths.filter(m => m < monthKey);
 
   let rowsHTML = '';
   students.forEach((s, idx) => {
@@ -4726,42 +4811,67 @@ function renderAssistantTable(students, cls) {
     if (s.school_name) metaTags += `<span class="student-tag school">🏫 ${escapeHtml(s.school_name)}</span>`;
     if (s.parent_phone) metaTags += `<span class="student-tag phone"><a href="tel:${escapeHtml(s.parent_phone)}" style="color:inherit;text-decoration:none;">📞 PH: ${escapeHtml(s.parent_phone)}</a></span>`;
 
-
-
-    // ---- Payment state for current month ----
+    // Payment state for current finance month (default: unpaid)
     const payStatus = getPaymentState(cls.id, s.id, monthKey);
     const isPaid = payStatus === 'paid';
-    const radioName = `fin_pay_${s.id}`;
-
-    // ---- Carryover: if prev month unpaid, add prev month fee ----
-    const prevSettled = localStorage.getItem(`fin_settled__${cls.id}`) || '';
-    const prevPaid = getPaymentState(cls.id, s.id, prevMonthKey) === 'paid';
-    const showCarryover = prevSettled !== prevMonthKey && !prevPaid;
     const basePrice = Number(s.price_per_session || 0);
-    // We estimate prev month sessions from state.sessions (dates in prev month)
-    const sessions = state.sessions || [];
-    const prevSessions = sessions.filter(sess => sess.session_date && sess.session_date.startsWith(prevMonthKey));
-    const prevPresentCount = prevSessions.filter(sess => {
-      const rec = (sess.records || []).find(r => r.student_id === s.id);
-      return rec && rec.is_present;
-    }).length;
-    const prevCarryoverAmount = showCarryover ? prevPresentCount * basePrice : 0;
 
-    // Current month sessions (for display — tháng hiện tại)
+    // Current month sessions attended
+    const sessions = state.sessions || [];
     const curSessions = sessions.filter(sess => sess.session_date && sess.session_date.startsWith(monthKey));
     const curPresentCount = curSessions.filter(sess => {
       const rec = (sess.records || []).find(r => r.student_id === s.id);
       return rec && rec.is_present;
     }).length;
     const curFee = curPresentCount * basePrice;
-    const totalDue = curFee + prevCarryoverAmount;
 
-    const carryoverNote = showCarryover && prevCarryoverAmount > 0
-      ? `<div style="font-size:11px;color:var(--accent);margin-top:2px;">+ Nợ cũ ${getMonthLabel(prevMonthKey)}: +${prevCarryoverAmount.toLocaleString('vi-VN')}₫</div>`
-      : '';
+    // Prior unpaid months check
+    let totalPriorDebt = 0;
+    const priorDebtItems = [];
+
+    priorMonths.forEach(pMonth => {
+      const isPriorPaid = getPaymentState(cls.id, s.id, pMonth) === 'paid';
+      if (!isPriorPaid) {
+        const pSessions = sessions.filter(sess => sess.session_date && sess.session_date.startsWith(pMonth));
+        const pCount = pSessions.filter(sess => {
+          const rec = (sess.records || []).find(r => r.student_id === s.id);
+          return rec && rec.is_present;
+        }).length;
+        const pDebt = pCount * basePrice;
+        if (pDebt > 0) {
+          totalPriorDebt += pDebt;
+          priorDebtItems.push({ monthKey: pMonth, debt: pDebt, count: pCount });
+        }
+      }
+    });
+
+    const totalDue = curFee + totalPriorDebt;
+
+    // Build carryover note HTML
+    let carryoverNote = '';
+    if (priorDebtItems.length > 0) {
+      carryoverNote = priorDebtItems.map(pd => `
+        <div style="font-size:11.5px;color:var(--accent);font-weight:600;margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span>+ Nợ cũ ${getMonthLabel(pd.monthKey)}: +${pd.debt.toLocaleString('vi-VN')}₫</span>
+          <button type="button" class="btn-quick-clear-debt" data-sid="${s.id}" data-pmonth="${pd.monthKey}" title="Đánh dấu học sinh đã đóng nợ ${getMonthLabel(pd.monthKey)}" style="
+            background: rgba(224,83,73,0.12);
+            border: 1px solid rgba(224,83,73,0.3);
+            color: var(--accent);
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 2px 7px;
+            cursor: pointer;
+            line-height: 1.2;
+          ">
+            Đã thu T${parseInt(pd.monthKey.split('-')[1])} ✓
+          </button>
+        </div>
+      `).join('');
+    }
 
     rowsHTML += `
-      <tr style="${isPaid ? 'background:rgba(103,212,160,0.04);' : (showCarryover ? 'background:rgba(255,110,108,0.04);' : '')}">
+      <tr style="${isPaid ? 'background:rgba(103,212,160,0.04);' : (priorDebtItems.length > 0 ? 'background:rgba(255,110,108,0.03);' : '')}">
         <td class="stt" style="text-align:center;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);width:40px;">${idx + 1}</td>
         <td>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -4779,22 +4889,40 @@ function renderAssistantTable(students, cls) {
           <div style="font-weight:600;color:var(--text-primary);">${monthLabel}</div>
           <div style="font-size:11.5px;color:var(--text-muted);">${curPresentCount} buổi · ${curFee.toLocaleString('vi-VN')}₫</div>
           ${carryoverNote}
-          ${totalDue !== curFee ? `<div style="font-size:12px;font-weight:700;color:var(--accent);margin-top:2px;">Tổng: ${totalDue.toLocaleString('vi-VN')}₫</div>` : ''}
+          ${totalDue !== curFee ? `<div style="font-size:12.5px;font-weight:700;color:var(--accent);margin-top:3px;">Tổng cần thu: ${totalDue.toLocaleString('vi-VN')}₫</div>` : ''}
         </td>
-        <td style="min-width:140px;">
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <label style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;">
-              <input type="radio" name="${radioName}" value="unpaid" ${!isPaid ? 'checked' : ''}
-                style="accent-color:var(--accent);width:15px;height:15px;"
-                data-sid="${s.id}" data-month="${monthKey}" data-clsid="${cls.id}">
-              <span style="color:${!isPaid ? 'var(--accent)' : 'var(--text-muted)'};">Chưa đóng</span>
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;">
-              <input type="radio" name="${radioName}" value="paid" ${isPaid ? 'checked' : ''}
-                style="accent-color:var(--success);width:15px;height:15px;"
-                data-sid="${s.id}" data-month="${monthKey}" data-clsid="${cls.id}">
-              <span style="color:${isPaid ? 'var(--success)' : 'var(--text-muted)'};">Đã đóng ✓</span>
-            </label>
+        <td style="min-width:180px;white-space:nowrap;">
+          <div style="display:inline-flex;gap:6px;align-items:center;">
+            <button type="button" class="fin-pay-btn unpaid-btn ${!isPaid ? 'active' : ''}" data-sid="${s.id}" data-action="unpaid" title="Đánh dấu chưa đóng học phí ${monthLabel}" style="
+              padding: 7px 14px;
+              border-radius: 8px;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+              font-family: 'Inter', sans-serif;
+              transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+              ${!isPaid
+                ? 'background: rgba(224, 83, 73, 0.15); color: #E05349; border: 1.5px solid #E05349; box-shadow: 0 2px 8px rgba(224,83,73,0.2);'
+                : 'background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border); opacity: 0.65;'
+              }
+            ">
+              Chưa đóng
+            </button>
+            <button type="button" class="fin-pay-btn paid-btn ${isPaid ? 'active' : ''}" data-sid="${s.id}" data-action="paid" title="Đánh dấu đã đóng học phí ${monthLabel}" style="
+              padding: 7px 14px;
+              border-radius: 8px;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+              font-family: 'Inter', sans-serif;
+              transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+              ${isPaid
+                ? 'background: linear-gradient(135deg, #2F8F5E, #247A4E); color: #ffffff; border: 1.5px solid #247A4E; box-shadow: 0 2px 10px rgba(47,143,94,0.3);'
+                : 'background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border); opacity: 0.65;'
+              }
+            ">
+              Đã đóng ✓
+            </button>
           </div>
         </td>
       </tr>
@@ -4820,34 +4948,34 @@ function renderAssistantTable(students, cls) {
     </div>
   `;
 
-  // Wire payment radio buttons
-  container.querySelectorAll('input[type="radio"][data-sid]').forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      const { sid, month, clsid } = e.target.dataset;
-      const status = e.target.value; // 'paid' | 'unpaid'
-      setPaymentState(clsid, sid, month, status);
+  // Wire rectangular buttons: Chưa đóng / Đã đóng
+  container.querySelectorAll('.fin-pay-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sid = btn.dataset.sid;
+      const action = btn.dataset.action; // 'paid' | 'unpaid'
+      setPaymentState(cls.id, sid, monthKey, action);
 
-      // Update label colors in same row
-      const row = e.target.closest('tr');
-      if (row) {
-        row.querySelectorAll(`input[name="${e.target.name}"]`).forEach(r => {
-          const lbl = r.parentElement.querySelector('span');
-          if (r.value === 'paid') {
-            lbl.style.color = status === 'paid' ? 'var(--success)' : 'var(--text-muted)';
-          } else {
-            lbl.style.color = status === 'unpaid' ? 'var(--accent)' : 'var(--text-muted)';
-          }
-        });
-        row.style.background = status === 'paid' ? 'rgba(103,212,160,0.05)' : '';
-      }
-
-      // Update paid counter badge and settle bar
-      const allStudents = state.students || [];
-      updateFinancePaidBadge(allStudents, cls);
-      renderFinanceSettleBar(allStudents, cls);
+      // Re-render table, badge and settle bar
+      renderAssistantTable(students, cls);
+      updateFinancePaidBadge(state.students || [], cls);
+      renderFinanceSettleBar(state.students || [], cls);
     });
   });
 
+  // Wire quick clear prior debt buttons
+  container.querySelectorAll('.btn-quick-clear-debt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sid = btn.dataset.sid;
+      const pmonth = btn.dataset.pmonth;
+      setPaymentState(cls.id, sid, pmonth, 'paid');
+      showToast(`✅ Đã thu nợ ${getMonthLabel(pmonth)}!`);
+
+      // Re-render table, badge and settle bar
+      renderAssistantTable(students, cls);
+      updateFinancePaidBadge(state.students || [], cls);
+      renderFinanceSettleBar(state.students || [], cls);
+    });
+  });
 }
 
 /* ---------------- Student Note Modal — Split-Panel Layout (Góc Trợ Lý) ---------------- */
