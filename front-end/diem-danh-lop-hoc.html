@@ -3693,8 +3693,8 @@ function renderMain() {
         <button type="button" class="btn-export-class" id="openPeriodHistBtn" title="Xem lịch sử các kỳ doanh thu đã chốt">
           📊 Lịch sử các kỳ (${cls.settled_period_count || 0})
         </button>
-        <button type="button" class="btn-export-class" id="exportClassBtn" title="In & Xuất báo cáo PDF cho lớp ${escapeHtml(cls.name)}">
-          📄 Xuất PDF lớp này
+        <button type="button" class="btn-export-class" id="exportClassExcelBtn" title="Xuất báo cáo Excel (.xlsx) toàn lớp theo từng học sinh" style="background:linear-gradient(135deg,#217346,#1a5c38);color:#fff;border-color:transparent;">
+          📊 Excel cả lớp
         </button>
       </div>
     </div>
@@ -3761,10 +3761,9 @@ function renderMain() {
 
   startClock();
 
-  // Export PDF Button event in class header
-  document.getElementById('exportClassBtn').addEventListener('click', () => {
-    exportCurrentClassPDF();
-  });
+  // Export Excel Button event in class header
+  const exportClassExcelBtnEl = document.getElementById('exportClassExcelBtn');
+  if (exportClassExcelBtnEl) exportClassExcelBtnEl.addEventListener('click', () => exportClassExcel());
 
   const periodHistBtn = document.getElementById('openPeriodHistBtn');
   if (periodHistBtn) periodHistBtn.addEventListener('click', () => openPeriodHistoryModal());
