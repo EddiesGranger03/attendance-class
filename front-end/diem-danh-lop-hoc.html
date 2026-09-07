@@ -3850,11 +3850,11 @@ function renderMain() {
           <div class="form-row-2col">
             <div>
               <label>SĐT Bố/Mẹ</label>
-              <input type="tel" id="popParentPhone" class="mono" placeholder="0912 345 678" autocomplete="off">
+              <input type="text" id="popParentPhone" class="mono" placeholder="0912345678" autocomplete="off" inputmode="numeric" maxlength="10" oninput="this.value=this.value.replace(/[^\d]/g,'').slice(0,10)">
             </div>
             <div>
               <label>Học phí / buổi (VNĐ) <span style="color:var(--accent);">*</span></label>
-              <input type="text" id="popStudentPrice" class="mono" placeholder="200000" required autocomplete="off" inputmode="numeric" oninput="this.value=this.value.replace(/[^\d]/g,'')">
+              <input type="text" id="popStudentPrice" class="mono" placeholder="200000" required autocomplete="off" inputmode="numeric" oninput="this.value=this.value.replace(/[^\d]/g,'')" onkeydown="if(['e','E','+','-','.'].includes(event.key))event.preventDefault()">
             </div>
           </div>
 
@@ -4162,11 +4162,11 @@ function renderRoster(students) {
             <div class="form-row-2col">
               <div>
                 <label>SĐT Bố/Mẹ</label>
-                <input type="tel" id="editParentPhone" class="mono" value="${escapeHtml(s.parent_phone || '')}" placeholder="0912 345 678" autocomplete="off">
+                <input type="text" id="editParentPhone" class="mono" value="${escapeHtml(s.parent_phone || '')}" placeholder="0912345678" autocomplete="off" inputmode="numeric" maxlength="10" oninput="this.value=this.value.replace(/[^\d]/g,'').slice(0,10)">
               </div>
               <div>
                 <label>Học phí / buổi (VNĐ) <span style="color:var(--accent);">*</span></label>
-                <input type="text" id="editStudentPrice" class="mono" value="${s.price_per_session}" required autocomplete="off" inputmode="numeric" oninput="this.value=this.value.replace(/[^\d]/g,'')">
+                <input type="text" id="editStudentPrice" class="mono" value="${s.price_per_session}" required autocomplete="off" inputmode="numeric" oninput="this.value=this.value.replace(/[^\d]/g,'')" onkeydown="if(['e','E','+','-','.'].includes(event.key))event.preventDefault()">
               </div>
             </div>
 
