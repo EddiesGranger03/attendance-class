@@ -6275,7 +6275,7 @@ async function exportStudentExcel(studentId) {
 }
 
 /* ---------------- Export class-level Excel report (Format as per image: per-student blocks with attended dates, filtered by unpaid months) ---------------- */
-async function exportClassExcel() {
+async function exportClassExcel(targetMonthKey) {
   if (!selectedClassId || !state.currentClass) return;
   const cls = state.currentClass;
 
@@ -6297,16 +6297,15 @@ async function exportClassExcel() {
       if (!sessionsByMonth[key]) sessionsByMonth[key] = [];
       sessionsByMonth[key].push(sess);
     });
-    const months = Object.keys(sessionsByMonth).sort();
+    let months = Object.keys(sessionsByMonth).sort();
+    if (targetMonthKey) {
+      months = months.filter(m => m <= targetMonthKey);
+    }
 
     if (!months.length) { showToast('Lớp chưa có buổi học nào.', 'error'); return; }
 
-    // Period label for merged header: e.g. "TỔNG SỐ BUỔI HỌC THÁNG 07 + 08 + 09 + 10"
-    const monthNums = months.map(m => m.split('-')[1].padStart(2, '0'));
-    const periodHeader = `TỔNG SỐ BUỔI HỌC THÁNG ${monthNums.join(' + ')}`;
-
     // Max sessions in any single month (determines date columns count)
-    const maxCols = Math.max(6, months.reduce((mx, m) => Math.max(mx, sessionsByMonth[m].length), 0));
+    const maxCols = Math.max(6, months.reduce((mx, m) => Math.max(mx, (sessionsByMonth[m] || []).length), 0));
 
     // Column layout:
     // 0: STT | 1: HỌ VÀ TÊN | 2: Tháng label | 3..(3+maxCols-1): date slots | (3+maxCols): TỔNG
@@ -6319,20 +6318,6 @@ async function exportClassExcel() {
     const studentBlockInfo = [];
 
     students.forEach((student, sIdx) => {
-      const headerRowIdx = row;
-
-      // Header row for this student block
-      const hdr = Array(TOTAL_COLS).fill('');
-      hdr[0] = 'STT';
-      hdr[1] = 'HỌ VÀ TÊN';
-      hdr[2] = periodHeader; // merged across cols 2..(TOTAL_COL-1)
-      hdr[TOTAL_COL] = 'TỔNG';
-      wsData.push(hdr);
-
-      // Merge header across date section
-      merges.push({ s: { r: row, c: 2 }, e: { r: row, c: TOTAL_COL - 1 } });
-      row++;
-
       // Filter months: ONLY months that this student has NOT paid
       // If paid: omit that month. If unpaid: show that month and its dates
       let totalPresent = 0;
@@ -6347,7 +6332,7 @@ async function exportClassExcel() {
 
         const [yr, mo] = mKey.split('-');
         const label = `Tháng ${parseInt(mo)}`;
-        const monthSess = sessionsByMonth[mKey];
+        const monthSess = sessionsByMonth[mKey] || [];
 
         const attendedDays = monthSess
           .filter(sess => {
@@ -6359,9 +6344,32 @@ async function exportClassExcel() {
 
         if (attendedDays.length > 0) {
           totalPresent += attendedDays.length;
-          unpaidMonthRows.push({ label, days: attendedDays });
+          unpaidMonthRows.push({ label, days: attendedDays, monthNum: mo.padStart(2, '0') });
         }
       });
+
+      // Period label for this specific student: ONLY includes their unpaid months
+      let studentPeriodHeader = '';
+      if (unpaidMonthRows.length > 0) {
+        const unpaidMonthNums = [...new Set(unpaidMonthRows.map(r => r.monthNum))];
+        studentPeriodHeader = `TỔNG SỐ BUỔI HỌC THÁNG ${unpaidMonthNums.join(' + ')}`;
+      } else {
+        studentPeriodHeader = 'TỔNG SỐ BUỔI HỌC (ĐÃ ĐÓNG ĐỦ)';
+      }
+
+      const headerRowIdx = row;
+
+      // Header row for this student block
+      const hdr = Array(TOTAL_COLS).fill('');
+      hdr[0] = 'STT';
+      hdr[1] = 'HỌ VÀ TÊN';
+      hdr[2] = studentPeriodHeader; // merged across cols 2..(TOTAL_COL-1)
+      hdr[TOTAL_COL] = 'TỔNG';
+      wsData.push(hdr);
+
+      // Merge header across date section
+      merges.push({ s: { r: row, c: 2 }, e: { r: row, c: TOTAL_COL - 1 } });
+      row++;
 
       const displayRows = unpaidMonthRows.length > 0
         ? unpaidMonthRows
