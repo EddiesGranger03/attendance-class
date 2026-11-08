@@ -25,18 +25,25 @@ def _get_sqlite_url() -> str:
 
 # Attempt to connect to PostgreSQL; if fallback is enabled and connection fails, use SQLite
 try:
-    if DATABASE_URL.startswith("postgresql"):
-        # Test engine creation
+    if DATABASE_URL.startswith("postgresql") or DATABASE_URL.startswith("postgres://"):
+        normalized_db_url = (
+            DATABASE_URL.replace("postgres://", "postgresql://", 1)
+            if DATABASE_URL.startswith("postgres://")
+            else DATABASE_URL
+        )
+        # Test engine creation with connect_timeout so unreachable DB hosts don't hang startup
         engine = create_engine(
-            DATABASE_URL,
+            normalized_db_url,
             pool_pre_ping=True,
             pool_size=10,
-            max_overflow=20
+            max_overflow=20,
+            connect_args={"connect_timeout": 5}
         )
         # Test connection
         with engine.connect() as conn:
             pass
 except Exception as e:
+    engine = None
     if settings.USE_SQLITE_FALLBACK:
         SQLITE_URL = _get_sqlite_url()
         print(f"[DATABASE NOTICE] PostgreSQL connection failed ({e}). Falling back to local SQLite: '{SQLITE_URL}'.")

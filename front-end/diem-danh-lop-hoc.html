@@ -3129,6 +3129,16 @@ async function apiRequest(endpoint, options = {}) {
     let response;
     try {
       response = await fetch(primaryUrl, { ...options, headers });
+      const contentType = response.headers.get('content-type') || '';
+      const isProxyGatewayError =
+        response.status === 502 ||
+        response.status === 503 ||
+        response.status === 504 ||
+        (response.status === 404 && !contentType.includes('application/json'));
+      if (isProxyGatewayError && primaryUrl !== fallbackUrl) {
+        console.warn(`Primary route (${primaryUrl}) returned HTTP ${response.status}, retrying direct cloud API: ${fallbackUrl}`);
+        response = await fetch(fallbackUrl, { ...options, headers });
+      }
     } catch (netErr) {
       if (primaryUrl !== fallbackUrl) {
         console.warn(`Primary route (${primaryUrl}) unreachable, using direct cloud API: ${fallbackUrl}`);
@@ -3149,15 +3159,34 @@ async function apiRequest(endpoint, options = {}) {
       return null;
     }
 
-    const data = await response.json();
+    const rawText = await response.text();
+    let data = null;
+    if (rawText && rawText.trim()) {
+      try {
+        data = JSON.parse(rawText);
+      } catch (parseErr) {
+        data = null;
+      }
+    }
+
     if (!response.ok) {
-      throw new Error(data.detail || 'Có lỗi xảy ra khi gọi máy chủ.');
+      if (data && data.detail) {
+        throw new Error(typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail));
+      }
+      if (response.status === 502 || response.status === 503 || response.status === 504) {
+        throw new Error('Máy chủ Backend (Render) đang khởi động lại hoặc tạm ngưng phản hồi. Vui lòng kiểm tra Render Dashboard hoặc thử lại sau ít phút.');
+      }
+      throw new Error(`Máy chủ phản hồi lỗi (HTTP ${response.status}). Vui lòng thử lại sau.`);
+    }
+
+    if (data === null) {
+      throw new Error('Máy chủ trả về phản hồi rỗng (do quá thời gian chờ kết nối Backend trên Render). Vui lòng kiểm tra trạng thái dịch vụ trên Render Dashboard.');
     }
     return data;
   } catch (error) {
     console.error(`API Error [${endpoint}]:`, error);
     if (error.name === 'TypeError' && String(error.message || '').includes('fetch')) {
-      throw new Error('Máy chủ đám mây đang khởi động hoặc mạng gián đoạn. Vui lòng thử lại sau vài giây.');
+      throw new Error('Không thể kết nối tới máy chủ Backend (Render có thể đang ngủ, bị tạm ngưng hoặc lỗi Database). Vui lòng kiểm tra Render Dashboard hoặc thử lại sau.');
     }
     throw error;
   }
