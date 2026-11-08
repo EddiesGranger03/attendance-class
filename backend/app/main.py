@@ -128,4 +128,8 @@ def get_logo():
 @app.get("/health", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
 def health_check():
-    return {"status": "ok", "project": settings.PROJECT_NAME}
+    return {
+        "status": "ok",
+        "project": settings.PROJECT_NAME,
+        "db_dialect": engine.dialect.name if engine else "none"
+    }
