@@ -1,10 +1,12 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from starlette.requests import Request
 
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 import app.models  # Ensure all models are registered with Base.metadata
 from app.core.config import settings
 from app.core.database import Base, engine
@@ -13,51 +15,49 @@ from app.routers.classrooms import router as classrooms_router
 from app.routers.students import router as students_router
 from app.routers.sessions import router as sessions_router
 
-# Create tables immediately on startup
-Base.metadata.create_all(bind=engine)
+logger = logging.getLogger("app.migrate")
+HEALTH_TABLES = ("users", "classrooms", "students", "attendance_sessions", "attendance_records")
+
+# (table, column, type for postgres, type for sqlite). Additive-only: never drop/rename here.
+MIGRATION_COLUMNS = [
+    ("students", "school_class", "VARCHAR(100)", "VARCHAR(100)"),
+    ("students", "school_name", "VARCHAR(255)", "VARCHAR(255)"),
+    ("students", "parent_phone", "VARCHAR(50)", "VARCHAR(50)"),
+    ("students", "notes", "VARCHAR(1000)", "VARCHAR(1000)"),
+    ("attendance_sessions", "absence_reason", "VARCHAR(500)", "VARCHAR(500)"),
+    ("attendance_sessions", "period_id", "VARCHAR(36)", "VARCHAR(36)"),
+    ("attendance_sessions", "is_settled", "BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT 0"),
+    ("attendance_records", "note", "VARCHAR(500)", "VARCHAR(500)"),
+]
+
 
 def auto_migrate():
-    """Ensure newly added columns exist in database."""
-    with engine.connect() as conn:
-        # Migrate students columns
-        for col, col_type in [
-            ("school_class", "VARCHAR(100)"),
-            ("school_name", "VARCHAR(255)"),
-            ("parent_phone", "VARCHAR(50)")
-        ]:
-            try:
-                if engine.dialect.name == "postgresql":
-                    conn.execute(text(f"ALTER TABLE students ADD COLUMN IF NOT EXISTS {col} {col_type};"))
-                elif engine.dialect.name == "sqlite":
-                    conn.execute(text(f"ALTER TABLE students ADD COLUMN {col} {col_type};"))
-                conn.commit()
-            except Exception:
-                pass
-
-        # Migrate attendance_sessions columns
+    """Add any missing columns. Additive only; errors are logged, never silently swallowed."""
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    for table, col, pg_type, sqlite_type in MIGRATION_COLUMNS:
+        if table not in existing_tables:
+            continue
+        have = {c["name"] for c in inspector.get_columns(table)}
+        if col in have:
+            continue
+        col_type = pg_type if engine.dialect.name == "postgresql" else sqlite_type
         try:
-            if engine.dialect.name == "postgresql":
-                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN IF NOT EXISTS absence_reason VARCHAR(500);"))
-                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN IF NOT EXISTS period_id VARCHAR(36);"))
-                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN IF NOT EXISTS is_settled BOOLEAN DEFAULT FALSE;"))
-                conn.execute(text("ALTER TABLE attendance_records ADD COLUMN IF NOT EXISTS note VARCHAR(500);"))
-                conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS notes VARCHAR(1000);"))
-            elif engine.dialect.name == "sqlite":
-                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN absence_reason VARCHAR(500);"))
-                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN period_id VARCHAR(36);"))
-                conn.execute(text("ALTER TABLE attendance_sessions ADD COLUMN is_settled BOOLEAN DEFAULT 0;"))
-                conn.execute(text("ALTER TABLE attendance_records ADD COLUMN note VARCHAR(500);"))
-                conn.execute(text("ALTER TABLE students ADD COLUMN notes VARCHAR(1000);"))
-            conn.commit()
+            with engine.begin() as conn:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
+            logger.warning("Migration: added column %s.%s", table, col)
         except Exception:
-            pass
+            logger.exception("Migration FAILED: could not add column %s.%s", table, col)
 
-auto_migrate()
+
+def run_startup_tasks():
+    Base.metadata.create_all(bind=engine)  # only creates missing tables, never drops
+    auto_migrate()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    auto_migrate()
+    run_startup_tasks()
     yield
 
 
@@ -70,6 +70,24 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan
 )
+
+@app.middleware("http")
+async def maintenance_guard(request: Request, call_next):
+    """Return 503 for API calls while MAINTENANCE_MODE is on. /health stays reachable."""
+    path = request.url.path
+    if (
+        settings.MAINTENANCE_MODE
+        and path.startswith(settings.API_V1_STR)
+        and path != f"{settings.API_V1_STR}/health"
+        and request.method != "OPTIONS"
+    ):
+        return JSONResponse(
+            status_code=503,
+            content={"maintenance": True, "detail": "Hệ thống đang bảo trì. Dữ liệu của bạn được giữ an toàn."},
+            headers={"Retry-After": "30"},
+        )
+    return await call_next(request)
+
 
 # Set all CORS enabled origins
 app.add_middleware(
@@ -127,9 +145,25 @@ def get_logo():
 
 @app.get("/health", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
-def health_check():
-    return {
-        "status": "ok",
+def health_check(request: Request):
+    """Deep health: pings the DB and reports row counts so an unexpectedly empty DB is obvious."""
+    counts = {}
+    show_counts = bool(settings.HEALTH_TOKEN) and request.headers.get("x-health-token") == settings.HEALTH_TOKEN
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+            for table in (HEALTH_TABLES if show_counts else ()):
+                counts[table] = conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar()
+        db_ok = True
+    except Exception as e:
+        logging.getLogger("app.health").exception("Health check DB error")
+        db_ok = False
+        counts = {"error": type(e).__name__}
+    body = {
+        "status": "ok" if db_ok else "degraded",
         "project": settings.PROJECT_NAME,
-        "db_dialect": engine.dialect.name if engine else "none"
+        "db_dialect": engine.dialect.name if engine else "none",
+        "maintenance": settings.MAINTENANCE_MODE,
+        "counts": counts,
     }
+    return JSONResponse(status_code=200 if db_ok else 503, content=body)

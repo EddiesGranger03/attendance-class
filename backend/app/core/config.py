@@ -11,7 +11,15 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres123@localhost:5432/attendance_db"
-    USE_SQLITE_FALLBACK: bool = True
+    # SAFETY: never silently fall back to an empty SQLite DB in production.
+    # Enable explicitly (USE_SQLITE_FALLBACK=true) only for local development.
+    USE_SQLITE_FALLBACK: bool = False
+
+    # When true, every /api/* request returns 503 (health endpoints stay up).
+    MAINTENANCE_MODE: bool = False
+
+    # Optional: if set, /health only includes row counts when header X-Health-Token matches.
+    HEALTH_TOKEN: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

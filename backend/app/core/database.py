@@ -71,7 +71,12 @@ except Exception as e:
             connect_args={"check_same_thread": False}
         )
     else:
-        raise e
+        # Fail fast: refuse to start rather than serve an empty/temporary database.
+        # On Render a failed start keeps the previous healthy deploy running.
+        raise RuntimeError(
+            f"Cannot connect to the configured database (host: {get_configured_db_host()}). "
+            f"Refusing to start so no empty fallback database is used. Original error: {e}"
+        ) from e
 
 if engine is None:
     if DATABASE_URL.startswith("sqlite"):

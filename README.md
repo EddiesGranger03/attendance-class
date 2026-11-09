@@ -114,3 +114,28 @@ Trong thư mục dự án đã có sẵn cấu hình `.vscode/launch.json`:
 * `GET /api/classes/{class_id}/daily/{target_date}`: Lấy trạng thái điểm danh theo ngày.
 * `POST /api/classes/{class_id}/sessions`: Lưu buổi điểm danh (tự động tính tổng tiền).
 * `DELETE /api/classes/{class_id}/sessions/{session_id}`: Xóa buổi điểm danh.
+
+
+---
+
+## 🛡️ Bảo vệ dữ liệu & quy trình cập nhật
+
+**Nguyên tắc:** deploy code mới *không* xoá database PostgreSQL. Các biện pháp dưới đây chặn những rủi ro còn lại.
+
+| Biện pháp | Chi tiết |
+|---|---|
+| Không fallback SQLite | `USE_SQLITE_FALLBACK` mặc định `false`. Nếu Postgres lỗi, app **từ chối khởi động** (Render giữ bản cũ đang chạy) thay vì tạo DB rỗng. **Trên Render hãy đặt `USE_SQLITE_FALLBACK=false`.** |
+| Migration an toàn | Chỉ *thêm* cột (xem `MIGRATION_COLUMNS` trong `backend/app/main.py`), lỗi được ghi log. Không xoá/đổi tên cột trong cùng một bản phát hành. |
+| Backup hằng ngày | `.github/workflows/backup.yml` chạy `scripts/backup.sh` lúc 02:17 (giờ VN), lưu artifact 30 ngày. Cần tạo GitHub secret **`DATABASE_URL`** (External Database URL của Render). Nên bật thêm backup của nhà cung cấp Postgres. |
+| Chế độ bảo trì | Đặt `MAINTENANCE_MODE=true` → mọi `/api/*` trả 503, web hiện màn hình bảo trì và tự mở lại khi tắt. `/health` vẫn hoạt động. |
+| Health sâu | `/health` ping DB. Đặt `HEALTH_TOKEN` rồi gọi với header `X-Health-Token` để xem số bản ghi từng bảng. |
+
+### Checklist mỗi lần cập nhật
+1. `DATABASE_URL=... ./scripts/backup.sh` (hoặc chạy workflow *Daily DB backup* thủ công).
+2. Nếu thay đổi cấu trúc DB: bật `MAINTENANCE_MODE=true`.
+3. Deploy.
+4. Gọi `/health` (kèm `X-Health-Token`) và so số bản ghi với trước khi cập nhật.
+5. Tắt `MAINTENANCE_MODE`.
+6. Có sự cố: `DATABASE_URL=... ./scripts/restore.sh backups/<file>.dump`.
+
+> Lưu ý: trạng thái "đã đóng tiền" ở màn Tài chính hiện lưu trong `localStorage` của trình duyệt, chưa nằm trong DB nên chưa được backup.

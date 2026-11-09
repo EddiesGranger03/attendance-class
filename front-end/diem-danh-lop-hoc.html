@@ -3110,6 +3110,29 @@ function getMonthLabel(monthKey) {
   return `Tháng ${parseInt(mo)}/${yr}`;
 }
 
+/* ---------------- Maintenance overlay ---------------- */
+let maintenanceTimer = null;
+function showMaintenanceOverlay() {
+  if (document.getElementById('maintenanceOverlay')) return;
+  const el = document.createElement('div');
+  el.id = 'maintenanceOverlay';
+  el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(10,14,25,.94);color:#fff;text-align:center;font-family:inherit';
+  el.innerHTML = '<div style="max-width:420px"><div style="font-size:48px">🛠️</div>'
+    + '<h2 style="margin:12px 0 8px">Hệ thống đang bảo trì</h2>'
+    + '<p style="opacity:.85;line-height:1.5">Dữ liệu của bạn được giữ an toàn. Trang sẽ tự động mở lại khi hoàn tất.</p></div>';
+  document.body.appendChild(el);
+  maintenanceTimer = setInterval(async () => {
+    try {
+      const r = await fetch(`${CLOUD_API_URL}/health`, { cache: 'no-store' });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && !j.maintenance) {
+        clearInterval(maintenanceTimer);
+        location.reload();
+      }
+    } catch (e) { /* keep waiting */ }
+  }, 20000);
+}
+
 /* ---------------- API Helper (with Cloud Direct Fallback) ---------------- */
 async function apiRequest(endpoint, options = {}) {
   const token = currentToken || localStorage.getItem(TOKEN_KEY);
@@ -3167,6 +3190,11 @@ async function apiRequest(endpoint, options = {}) {
       } catch (parseErr) {
         data = null;
       }
+    }
+
+    if (response.status === 503 && data && data.maintenance) {
+      showMaintenanceOverlay();
+      throw new Error(data.detail || 'Hệ thống đang bảo trì.');
     }
 
     if (!response.ok) {

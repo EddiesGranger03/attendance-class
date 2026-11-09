@@ -1,0 +1,31 @@
+name: Daily DB backup
+
+on:
+  schedule:
+    - cron: "17 19 * * *"   # 02:17 giờ VN hằng ngày
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cài pg_dump (khớp phiên bản PostgreSQL 16)
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-16
+      - name: Dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: ./scripts/backup.sh backups 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: attendance-db-${{ github.run_id }}
+          path: backups/*.dump
+          retention-days: 30
+          if-no-files-found: error
