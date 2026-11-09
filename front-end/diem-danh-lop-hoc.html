@@ -2880,6 +2880,7 @@
           </div>
         </div>
         <div class="auth-error" id="authError"></div>
+        <div id="serverWarmupHint" style="display:none;text-align:center;font-size:13px;opacity:.8;margin:4px 0 10px;">⏳ Đang khởi động máy chủ, bạn có thể nhập thông tin trong lúc chờ…</div>
         <button type="submit" class="btn-cosmic-submit" id="loginBtnSubmit">
           <span>🚀</span> Đăng nhập vào sổ
         </button>
@@ -3219,6 +3220,39 @@ async function apiRequest(endpoint, options = {}) {
     throw error;
   }
 }
+
+/* ---------------- Server warm-up (wake Render + Neon while user types) ---------------- */
+let serverReady = false;
+function setWarmupHint(show) {
+  const el = document.getElementById('serverWarmupHint');
+  if (el) el.style.display = show ? 'block' : 'none';
+}
+async function pingHealth(url, timeoutMs) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+    return r.ok;
+  } catch (e) {
+    return false;
+  } finally {
+    clearTimeout(t);
+  }
+}
+async function warmUpServer() {
+  setWarmupHint(true);
+  for (let i = 0; i < 8 && !serverReady; i++) {
+    serverReady = await pingHealth(`${API_BASE_URL}/health`, 25000)
+      || (API_BASE_URL !== CLOUD_API_URL && await pingHealth(`${CLOUD_API_URL}/health`, 25000));
+    if (!serverReady) await new Promise(r => setTimeout(r, 4000));
+  }
+  setWarmupHint(false);
+}
+warmUpServer();
+// Wake again if the user comes back to an idle tab (server may have gone to sleep)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !currentToken) { serverReady = false; warmUpServer(); }
+});
 
 /* ---------------- Utilities ---------------- */
 function todayStr() {
